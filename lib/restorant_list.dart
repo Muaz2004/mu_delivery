@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mu_delivery/resdetail_page.dart';
 
 class RestorantList extends StatefulWidget {
   const RestorantList({super.key});
@@ -34,6 +35,14 @@ class _RestorantListState extends State<RestorantList> {
               child: ListTile(
                 title: Text(name),
                 subtitle: Text('$address\nRating: $rating'),
+                onTap: () {
+                         Navigator.push( context,MaterialPageRoute(
+                  builder: (context) => ResdetailPage(
+                  restaurantId: restaurants[index].id,
+                      ),
+                    ),
+                 );
+                },
               ),
             );
           },
