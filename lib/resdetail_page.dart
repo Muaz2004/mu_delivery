@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mu_delivery/foodetail_page.dart';
 
 class ResdetailPage extends StatelessWidget {
   final String restaurantId;
@@ -53,11 +54,14 @@ class ResdetailPage extends StatelessWidget {
                         menuRefs.map((ref) => (ref as DocumentReference).get()),
                       ),
                       builder: (context, menuSnapshot) {
-                        if (menuSnapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (menuSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
 
-                        if (!menuSnapshot.hasData || menuSnapshot.data!.isEmpty) {
+                        if (!menuSnapshot.hasData ||
+                            menuSnapshot.data!.isEmpty) {
                           return const Text('No menu data found');
                         }
 
@@ -66,13 +70,16 @@ class ResdetailPage extends StatelessWidget {
                         // Use Column instead of ListView
                         return Column(
                           children: menuDocs.map((menuDoc) {
-                            final menuData = menuDoc.data() as Map<String, dynamic>;
-                            final foodName = menuData['f_name'] ?? 'No Name';
+                            final menuData =
+                                menuDoc.data() as Map<String, dynamic>;
+                            final foodName =
+                                menuData['f_name'] ?? 'No Name';
                             final price = menuData['price'] ?? 0;
                             final imageUrl = menuData['imageurl'] ?? '';
 
                             return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              margin:
+                                  const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
                                 leading: imageUrl != ''
                                     ? Image.network(
@@ -80,11 +87,13 @@ class ResdetailPage extends StatelessWidget {
                                         width: 50,
                                         height: 50,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder: (context, error,
+                                            stackTrace) {
                                           return Container(
-                                              width: 50,
-                                              height: 50,
-                                              color: Colors.grey);
+                                            width: 50,
+                                            height: 50,
+                                            color: Colors.grey,
+                                          );
                                         },
                                       )
                                     : Container(
@@ -94,6 +103,16 @@ class ResdetailPage extends StatelessWidget {
                                       ),
                                 title: Text(foodName),
                                 subtitle: Text('\$${price.toString()}'),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => FoodetailPage(
+                                        foodId: menuDoc.id,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           }).toList(),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mu_delivery/foodetail_page.dart';
 
 class PopularFoods extends StatefulWidget {
   const PopularFoods({super.key});
@@ -24,27 +25,39 @@ class _PoupularFoodsState extends State<PopularFoods> {
           itemCount: foods.length,
           itemBuilder: (context, index) {
             final food = foods[index].data() as Map<String, dynamic>;
-            return Card(
-              margin: const EdgeInsets.all(8),
-              child: SizedBox(
-                width: 140,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Food image
-                    food['imageurl'] != null && food['imageurl'] != ""
-                        ? Image.network(food['imageurl'],
-                            height: 100, width: 120, fit: BoxFit.cover)
-                        : Container(height: 100, width: 120, color: Colors.grey),
-                    const SizedBox(height: 8),
-                    // Food name
-                    Text(food['f_name'] ?? 'No Name', textAlign: TextAlign.center),
-                    Text(food['restorant'] ?? 'No restorant name', textAlign: TextAlign.center),
-                    // Food price
-                    Text('\$${food['price'] ?? 0}'),
-                  ],
+            return GestureDetector(
+              child: Card(
+                margin: const EdgeInsets.all(8),
+                child: SizedBox(
+                  width: 140,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Food image
+                      food['imageurl'] != null && food['imageurl'] != ""
+                          ? Image.network(food['imageurl'],
+                              height: 100, width: 120, fit: BoxFit.cover)
+              
+                          : Container(height: 100, width: 120, color: const Color.fromARGB(255, 213, 173, 41)),
+                      const SizedBox(height: 8),
+                      // Food name
+                      Text(food['f_name'] ?? 'No Name', textAlign: TextAlign.center),
+                      Text(food['restorant'] ?? 'No restorant name', textAlign: TextAlign.center),
+                      // Food price
+                      Text('\$${food['price'] ?? 0}'),
+                    ],
+                  ),
                 ),
               ),
+
+              onTap: () {
+                   Navigator.push(context,
+                   MaterialPageRoute(
+                   builder: (context) => FoodetailPage(foodId: foods[index].id),
+               ),
+  );
+},
+
             );
           },
         );
