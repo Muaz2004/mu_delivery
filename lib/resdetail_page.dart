@@ -122,6 +122,7 @@ class ResdetailPage extends StatelessWidget {
                   else
                     const Text('No menu available'),
                 ],
+                
               ),
             ),
           );

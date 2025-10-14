@@ -42,7 +42,6 @@ class _HomePageState extends State<ResfoodPage> {
             ),
             const SizedBox(height: 8),
             RestorantList(),
-            const MiniScreen(),
           ],
         ),
       ),

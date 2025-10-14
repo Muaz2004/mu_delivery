@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mu_delivery/coustemer_home_page.dart';
 import 'package:mu_delivery/firebase_options.dart';
 import 'package:mu_delivery/providers/auth_provider.dart';
+import 'package:mu_delivery/providers/cart_provider.dart';
 import 'package:mu_delivery/signin_page.dart';
 import 'package:mu_delivery/wraper.dart';
 import 'package:provider/provider.dart';
@@ -12,12 +13,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-   runApp(
-    ChangeNotifierProvider(
-      create: (_) => myProvider(),
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => myProvider()), // existing auth provider
+        ChangeNotifierProvider(create: (_) => CartProvider()), // new cart provider
+      ],
       child: const MyApp(),
-    ),);
+    ),
+  );
 }
+
 
 
 class MyApp extends StatelessWidget {

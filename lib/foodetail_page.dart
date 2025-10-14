@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:mu_delivery/providers/cart_provider.dart';
 import 'package:mu_delivery/mini_screen.dart';
-//import 'package:mu_delivery/cart_item.dart';
-import 'global_cart.dart'; // Global cart list
-import 'cart_item.dart';
 
 class FoodetailPage extends StatefulWidget {
   final String foodId;
@@ -14,7 +13,7 @@ class FoodetailPage extends StatefulWidget {
 }
 
 class _FoodetailPageState extends State<FoodetailPage> {
-  int quantity = 1; // Local quantity for this food item
+  int quantity = 1; // Local quantity
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +30,13 @@ class _FoodetailPageState extends State<FoodetailPage> {
           }
 
           final foodData = snapshot.data!.data() as Map<String, dynamic>;
+          final restaurantId = (foodData['restaurantId'] as DocumentReference).id;
 
           return Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -47,11 +47,9 @@ class _FoodetailPageState extends State<FoodetailPage> {
                         fit: BoxFit.cover,
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        foodData['f_name'] ?? 'No Name',
-                        style: const TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
+                      Text(foodData['f_name'] ?? 'No Name',
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Text(foodData['description'] ?? 'No description'),
                       const SizedBox(height: 8),
@@ -59,84 +57,64 @@ class _FoodetailPageState extends State<FoodetailPage> {
                           style: const TextStyle(fontSize: 20)),
                       const SizedBox(height: 16),
 
-                      // Quantity selector
+                      // Quantity row
                       Row(
                         children: [
                           ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                if (quantity > 1) quantity--;
-                              });
-                            },
-                            child: const Text('-'),
-                          ),
+                              onPressed: () {
+                                if (quantity > 1) setState(() => quantity--);
+                              },
+                              child: const Text('-')),
                           Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              '$quantity',
-                              style: const TextStyle(fontSize: 18),
-                            ),
+                            child: Text('$quantity',
+                                style: const TextStyle(fontSize: 18)),
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                quantity++;
-                              });
-                            },
-                            child: const Text('+'),
-                          ),
+                              onPressed: () => setState(() => quantity++),
+                              child: const Text('+')),
                         ],
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Subtotal: \$${((foodData['price'] ?? 0) * quantity).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
+                          'Subtotal: \$${((foodData['price'] ?? 0) * quantity).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
 
-                      // Add to Cart button
+                      // Add to cart button
                       ElevatedButton(
                         onPressed: () {
-                          final String foodName =
-                              foodData['f_name'] ?? 'No Name';
-                          final double price =
-                              (foodData['price'] ?? 0).toDouble();
-                          final String foodId = widget.foodId;
+                          final cartProvider = 
+                              Provider.of<CartProvider>(context, listen: false);
 
-                          // Check if this food is already in globalCart
-                          final index = globalCart
-                              .indexWhere((item) => item.foodId == foodId);
+                          // Create food map
+                          final foodItem = {
+                            'foodId': widget.foodId,
+                            'name': foodData['f_name'] ?? 'No Name',
+                            'price': (foodData['price'] ?? 0).toDouble(),
+                            'quantity': quantity,
+                            'restaurantId': restaurantId,
+                          };
+
+                          // Check if food exists in cart
+                          final index = cartProvider.cartItems.indexWhere(
+                              (item) => item['foodId'] == widget.foodId);
 
                           if (index >= 0) {
-                            setState(() {
-                              globalCart[index].quantity += quantity;
-                            });
+                            cartProvider.cartItems[index]['quantity'] += quantity;
+                            cartProvider.notifyListeners();
                           } else {
-                            setState(() {
-                              globalCart.add(
-                                CartItem(
-                                  foodId: foodId,
-                                  name: foodName,
-                                  price: price,
-                                  quantity: quantity,
-                                ),
-                              );
-                            });
+                            cartProvider.addToCart(foodItem);
                           }
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  '$foodName added to cart ($quantity)'),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
+                              SnackBar(
+                                  content: Text(
+                                      '${foodData['f_name']} added ($quantity)')));
 
-                          setState(() {
-                            quantity = 1;
-                          });
+                          setState(() => quantity = 1);
                         },
                         child: const Text('Add to Cart'),
                       ),
@@ -145,9 +123,13 @@ class _FoodetailPageState extends State<FoodetailPage> {
                 ),
               ),
 
-              // --- Mini Cart at bottom ---
-              const MiniScreen()
-
+              // Mini cart at bottom  doesnt need to use consumer her since i used it in my miniscreen page
+              Consumer<CartProvider>(
+                builder: (context, cart, child) {
+                  if (cart.cartItems.isEmpty) return const SizedBox();
+                  return MiniScreen(restaurantId: restaurantId);
+                },
+              ),
             ],
           );
         },
