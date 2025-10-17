@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mu_delivery/authentication.dart';
 import 'package:mu_delivery/coustemer_home_page.dart';
-import 'package:mu_delivery/owner_dashboard.dart';
+import 'package:mu_delivery/owner_dashboards/owner_dashboard.dart';
 import 'package:provider/provider.dart'; // 🔹 Needed to access myProvider
 import 'package:mu_delivery/providers/auth_provider.dart'; // 🔹 import your provider
 
