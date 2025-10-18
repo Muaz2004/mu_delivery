@@ -10,7 +10,11 @@ class ResdetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Restaurant Details')),
+      backgroundColor: const Color(0xFFFFF3E0),
+      appBar: AppBar(
+        title: const Text('Restaurant Details'),
+        backgroundColor: const Color(0xFFFF7043),
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('Restorant_table')
@@ -35,6 +39,7 @@ class ResdetailPage extends StatelessWidget {
                 children: [
                   // Restaurant info
                   Card(
+                    color: const Color(0xFFFFAB91), // Updated card color
                     child: ListTile(
                       title: Text(name, style: const TextStyle(fontSize: 20)),
                       subtitle: Text('$address\nRating: $rating'),
@@ -67,19 +72,17 @@ class ResdetailPage extends StatelessWidget {
 
                         final menuDocs = menuSnapshot.data!;
 
-                        // Use Column instead of ListView
                         return Column(
                           children: menuDocs.map((menuDoc) {
                             final menuData =
                                 menuDoc.data() as Map<String, dynamic>;
-                            final foodName =
-                                menuData['f_name'] ?? 'No Name';
+                            final foodName = menuData['f_name'] ?? 'No Name';
                             final price = menuData['price'] ?? 0;
                             final imageUrl = menuData['imageurl'] ?? '';
 
                             return Card(
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 4),
+                              color: const Color(0xFFFFAB91), // Updated card color
+                              margin: const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
                                 leading: imageUrl != ''
                                     ? Image.network(
@@ -92,14 +95,14 @@ class ResdetailPage extends StatelessWidget {
                                           return Container(
                                             width: 50,
                                             height: 50,
-                                            color: Colors.grey,
+                                            color: const Color(0xFFFFF3E0),
                                           );
                                         },
                                       )
                                     : Container(
                                         width: 50,
                                         height: 50,
-                                        color: Colors.grey,
+                                        color: const Color(0xFFFFAB91),
                                       ),
                                 title: Text(foodName),
                                 subtitle: Text('\$${price.toString()}'),
@@ -122,7 +125,6 @@ class ResdetailPage extends StatelessWidget {
                   else
                     const Text('No menu available'),
                 ],
-                
               ),
             ),
           );

@@ -27,6 +27,7 @@ class _PoupularFoodsState extends State<PopularFoods> {
             final food = foods[index].data() as Map<String, dynamic>;
             return GestureDetector(
               child: Card(
+                color:Color(0xFFFFAB91),
                 margin: const EdgeInsets.all(8),
                 child: SizedBox(
                   width: 140,

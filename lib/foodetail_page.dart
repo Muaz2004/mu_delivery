@@ -18,7 +18,10 @@ class _FoodetailPageState extends State<FoodetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Food Details')),
+      backgroundColor: const Color(0xFFFFF3E0),
+      appBar: AppBar(title: const Text('Food Details'),
+      backgroundColor: const Color(0xFFFF7043),
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('menu')

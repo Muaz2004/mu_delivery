@@ -1,11 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mu_delivery/authentication.dart';
-import 'package:mu_delivery/coustemer_home_page.dart';
-import 'package:mu_delivery/owner_dashboards/owner_dashboard.dart';
-import 'package:provider/provider.dart'; // 🔹 Needed to access myProvider
-import 'package:mu_delivery/providers/auth_provider.dart'; // 🔹 import your provider
+import 'package:mu_delivery/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({super.key});
@@ -27,7 +24,7 @@ class _SigninPageState extends State<SigninPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 🔹 Email input
+            // Email input
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -37,7 +34,7 @@ class _SigninPageState extends State<SigninPage> {
               ),
             ),
             const SizedBox(height: 16),
-            // 🔹 Password input
+            // Password input
             TextField(
               controller: _passwordController,
               obscureText: true,
@@ -48,7 +45,7 @@ class _SigninPageState extends State<SigninPage> {
               ),
             ),
             const SizedBox(height: 24),
-            // 🔹 Sign in button
+            // Sign in button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -64,7 +61,7 @@ class _SigninPageState extends State<SigninPage> {
               ),
             ),
             const SizedBox(height: 12),
-            // 🔹 Navigation to Sign Up page
+            // Navigate to Register
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -86,37 +83,21 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
-  // 🔹 Sign in logic now fully handled via myProvider
+  // Sign in logic
   Future<void> _signIn() async {
     try {
-      // 🔹 Step 1: Call provider's signIn method
+      // Call provider's signIn method
       await context.read<myProvider>().signIn(
-        _emailController.text,
-        _passwordController.text,
-      );
+            _emailController.text,
+            _passwordController.text,
+          );
 
-      // 🔹 Step 2: Get role from provider
-      final role = context.read<myProvider>().role;
-
-      // 🔹 Step 3: Navigate according to role
-      if (role == 'owner') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OwnerDashboard()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-        );
-      }
-
-      // 🔹 Step 4: Show success message
+      // Sign-in is successful, Wrapper handles navigation automatically
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign in successful!')),
       );
     } on FirebaseAuthException catch (e) {
-      // 🔹 Handle email not verified
+      // Email not verified
       if (e.code == 'email-not-verified') {
         showDialog(
           context: context,
@@ -141,43 +122,31 @@ class _SigninPageState extends State<SigninPage> {
             ],
           ),
         );
-        if (e.code == 'invalid-email') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('The email address is badly formatted.')),
-    );
-  } else if (e.code == 'user-disabled') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This account has been disabled.')),
-    );
-  } else if (e.code == 'user-not-found') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No user found with this email.')),
-    );
-  } else if (e.code == 'wrong-password') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Incorrect password. Try again.')),
-    );
-  } else if (e.code == 'network-request-failed') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No internet connection. Please try later.')),
-    );
-  } else if (e.code == 'too-many-requests') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Too many attempts. Try again later.')),
-    );
-  } else if (e.code == 'operation-not-allowed') {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Email/password accounts are not enabled.')),
-    );}
-      
       } else {
-        // 🔹 Handle other errors
+        // Handle other FirebaseAuth errors
+        String message = '';
+        if (e.code == 'invalid-email') {
+          message = 'The email address is badly formatted.';
+        } else if (e.code == 'user-disabled') {
+          message = 'This account has been disabled.';
+        } else if (e.code == 'user-not-found') {
+          message = 'No user found with this email.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Incorrect password. Try again.';
+        } else if (e.code == 'network-request-failed') {
+          message = 'No internet connection. Please try later.';
+        } else if (e.code == 'too-many-requests') {
+          message = 'Too many attempts. Try again later.';
+        } else if (e.code == 'operation-not-allowed') {
+          message = 'Email/password accounts are not enabled.';
+        } else {
+          message = e.message ?? 'Unknown error occurred';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
+          SnackBar(content: Text(message)),
         );
       }
     } catch (e) {
-      // 🔹 Generic error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );

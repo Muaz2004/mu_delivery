@@ -21,7 +21,7 @@ class _RestorantListState extends State<RestorantList> {
         final restaurants = snapshot.data!.docs;
 
         return ListView.builder(
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemCount: restaurants.length,
           itemBuilder: (context, index) {
@@ -31,17 +31,20 @@ class _RestorantListState extends State<RestorantList> {
             final rating = data['rating'] ?? 0;
 
             return Card(
+              color: const Color(0xFFFFAB91), // Updated card color
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: ListTile(
                 title: Text(name),
                 subtitle: Text('$address\nRating: $rating'),
                 onTap: () {
-                         Navigator.push( context,MaterialPageRoute(
-                  builder: (context) => ResdetailPage(
-                  restaurantId: restaurants[index].id,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResdetailPage(
+                        restaurantId: restaurants[index].id,
                       ),
                     ),
-                 );
+                  );
                 },
               ),
             );

@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
           'Food Delivery',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFFFF7043),
         elevation: 2,
         centerTitle: true,
       ),
