@@ -4,6 +4,7 @@ import 'package:mu_delivery/popular_foods.dart';
 import 'package:mu_delivery/profile_page.dart';
 import 'package:mu_delivery/resfood_page.dart';
 import 'package:mu_delivery/restorant_list.dart';
+import 'package:mu_delivery/watchlist_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,19 +14,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-   int _currentIndex = 0;
+  int _currentIndex = 0;
 
   final List<Widget> _pages = [
     const ResfoodPage(),
     const OrdersPage(),
-    const ProfilePage(),
-    
+    const WatchlistPage(), // 3rd tab
+    const ProfilePage(),   // 4th tab
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
-    });}
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,29 +41,32 @@ class _HomePageState extends State<HomePage> {
         elevation: 2,
         centerTitle: true,
       ),
-      body:_pages[_currentIndex],
-    bottomNavigationBar:BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onItemTapped,
-
-          items:const [
-
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed, // IMPORTANT for 4+ tabs
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: const Color(0xFFFF7043), // orange for selected
+        unselectedItemColor: Colors.black54,        // gray for unselected
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'home',
+            label: 'Home',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.list_alt),
             label: 'Orders',
           ),
-
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checklist),
+            label: 'Watchlist',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
-
-        ],)
+        ],
+      ),
     );
   }
 }

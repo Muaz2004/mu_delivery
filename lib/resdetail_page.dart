@@ -14,6 +14,13 @@ class ResdetailPage extends StatefulWidget {
 
 class _ResdetailPageState extends State<ResdetailPage> {
   double? userRating; // store current user's rating
+  bool isInWatchlist = false; // new state for watchlist button
+
+  @override
+  void initState() {
+    super.initState();
+    checkWatchlistStatus();
+  }
 
   // save rating to Firestore
   Future<void> _rateRestaurant(double rating) async {
@@ -53,13 +60,26 @@ class _ResdetailPageState extends State<ResdetailPage> {
     });
   }
 
+  Future<void> checkWatchlistStatus() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
+
+    final existing = await watchlistRef
+        .where('userId', isEqualTo: userId)
+        .where('itemId', isEqualTo: widget.restaurantId)
+        .where('type', isEqualTo: "restorant")
+        .get();
+
+    setState(() {
+      isInWatchlist = existing.docs.isNotEmpty;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     
       appBar: AppBar(
         title: const Text('Restaurant Details'),
-        
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -95,8 +115,8 @@ class _ResdetailPageState extends State<ResdetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         ClipRRect(
-                          borderRadius:
-                              const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16)),
                           child: imageUrl.isNotEmpty
                               ? Image.network(
                                   imageUrl,
@@ -171,6 +191,36 @@ class _ResdetailPageState extends State<ResdetailPage> {
                               ),
                               const SizedBox(height: 12),
 
+                              // Watchlist button
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await addToWatchlist(
+                                      widget.restaurantId, "restorant");
+
+                                  setState(() {
+                                    isInWatchlist = !isInWatchlist;
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isInWatchlist
+                                            ? 'Added to your watchlist'
+                                            : 'Removed from your watchlist',
+                                      ),
+                                    ),
+                                    
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                backgroundColor: isInWatchlist ? Colors.red : Colors.green, // red for remove, green for add
+                                  ),
+                                
+                                child: Text(isInWatchlist
+                                    ? "Remove from Watchlist"
+                                    : "Add to Watchlist"),
+                              ),
+
                               // ⭐ user rating section
                               Row(
                                 children: List.generate(5, (index) {
@@ -216,8 +266,10 @@ class _ResdetailPageState extends State<ResdetailPage> {
                         menuRefs.map((ref) => (ref as DocumentReference).get()),
                       ),
                       builder: (context, menuSnapshot) {
-                        if (menuSnapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (menuSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
 
                         if (!menuSnapshot.hasData || menuSnapshot.data!.isEmpty) {
@@ -257,8 +309,8 @@ class _ResdetailPageState extends State<ResdetailPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        FoodetailPage(foodId: menuDocs[index].id),
+                                    builder: (context) => FoodetailPage(
+                                        foodId: menuDocs[index].id),
                                   ),
                                 );
                               },
@@ -288,8 +340,8 @@ class _ResdetailPageState extends State<ResdetailPage> {
                                                 imageUrl,
                                                 width: double.infinity,
                                                 fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (context, error, stackTrace) {
+                                                errorBuilder: (context, error,
+                                                    stackTrace) {
                                                   return Container(
                                                     color: const Color(0xFFFFCCBC),
                                                     child: const Icon(
@@ -363,5 +415,31 @@ class _ResdetailPageState extends State<ResdetailPage> {
         },
       ),
     );
+  }
+}
+
+Future<void> addToWatchlist(String itemId, String type) async {
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+  final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
+
+  // Check if item already exists
+  final existing = await watchlistRef
+      .where('userId', isEqualTo: userId)
+      .where('itemId', isEqualTo: itemId)
+      .where('type', isEqualTo: type)
+      .get();
+
+  if (existing.docs.isEmpty) {
+    await watchlistRef.add({
+      'userId': userId,
+      'itemId': itemId,
+      'type': type,
+      'addedAt': FieldValue.serverTimestamp(),
+    });
+  } else {
+    // Remove if exists
+    for (var doc in existing.docs) {
+      await doc.reference.delete();
+    }
   }
 }
