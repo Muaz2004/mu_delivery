@@ -1,11 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mu_delivery/foodetail_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class ResdetailPage extends StatelessWidget {
+class ResdetailPage extends StatefulWidget {
   final String restaurantId;
 
   const ResdetailPage({super.key, required this.restaurantId});
+
+  @override
+  State<ResdetailPage> createState() => _ResdetailPageState();
+}
+
+class _ResdetailPageState extends State<ResdetailPage> {
+  double? userRating; // store current user's rating
+
+  // save rating to Firestore
+  Future<void> _rateRestaurant(double rating) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    final ratingRef = FirebaseFirestore.instance
+        .collection('Restorant_table')
+        .doc(widget.restaurantId)
+        .collection('ratings')
+        .doc(userId);
+
+    await ratingRef.set({'rating': rating});
+
+    // recalculate the average
+    final allRatings = await FirebaseFirestore.instance
+        .collection('Restorant_table')
+        .doc(widget.restaurantId)
+        .collection('ratings')
+        .get();
+
+    if (allRatings.docs.isNotEmpty) {
+      double total = 0;
+      for (var doc in allRatings.docs) {
+        total += (doc['rating'] as num).toDouble();
+      }
+      double avg = total / allRatings.docs.length;
+
+      await FirebaseFirestore.instance
+          .collection('Restorant_table')
+          .doc(widget.restaurantId)
+          .update({'rating': avg});
+    }
+
+    setState(() {
+      userRating = rating;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +64,7 @@ class ResdetailPage extends StatelessWidget {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('Restorant_table')
-            .doc(restaurantId)
+            .doc(widget.restaurantId)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -28,7 +74,7 @@ class ResdetailPage extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final name = data['name'] ?? 'No Name';
           final address = data['adress'] ?? 'No Address';
-          final rating = data['rating'] ?? 0;
+          final rating = (data['rating'] ?? 0).toDouble();
           final imageUrl = data['imageurl'] ?? '';
           final menuRefs = data['menuRef'] as List<dynamic>?;
 
@@ -95,12 +141,14 @@ class ResdetailPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Icon(Icons.location_on, size: 16, color: Color.fromARGB(255, 218, 3, 3)),
+                                  const Icon(Icons.location_on,
+                                      size: 16, color: Colors.red),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       address,
-                                      style: const TextStyle(color: Color.fromARGB(255, 12, 12, 12)),
+                                      style: const TextStyle(
+                                          color: Color.fromARGB(255, 12, 12, 12)),
                                     ),
                                   ),
                                 ],
@@ -108,18 +156,38 @@ class ResdetailPage extends StatelessWidget {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Icon(Icons.star, size: 20, color:Color.fromARGB(255, 255, 255, 0)),
+                                  const Icon(Icons.star,
+                                      size: 20, color: Colors.amber),
                                   const SizedBox(width: 6),
                                   Text(
-                                    rating.toString(),
+                                    rating.toStringAsFixed(1),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Color.fromARGB(255, 6, 6, 6),
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ],
-                              )
+                              ),
+                              const SizedBox(height: 12),
+
+                              // ⭐ user rating section
+                              Row(
+                                children: List.generate(5, (index) {
+                                  double starValue = index + 1;
+                                  return IconButton(
+                                    icon: Icon(
+                                      Icons.star,
+                                      color: (userRating ?? rating) >= starValue
+                                          ? Colors.amber
+                                          : Colors.grey[300],
+                                    ),
+                                    onPressed: () {
+                                      _rateRestaurant(starValue);
+                                    },
+                                  );
+                                }),
+                              ),
                             ],
                           ),
                         )
@@ -170,11 +238,12 @@ class ResdetailPage extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           padding: const EdgeInsets.only(bottom: 16),
                           itemCount: menuDocs.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3, // Changed to 3 per row
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
-                            childAspectRatio: 0.7, // Adjusted for better proportions
+                            childAspectRatio: 0.7,
                           ),
                           itemBuilder: (context, index) {
                             final menuData =
@@ -202,9 +271,8 @@ class ResdetailPage extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    // Food image with placeholder
                                     Container(
-                                      height: 90, // Adjusted height for 3-column layout
+                                      height: 90,
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFFCCBC),
                                         borderRadius: const BorderRadius.vertical(
@@ -220,7 +288,8 @@ class ResdetailPage extends StatelessWidget {
                                                 imageUrl,
                                                 width: double.infinity,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
+                                                errorBuilder:
+                                                    (context, error, stackTrace) {
                                                   return Container(
                                                     color: const Color(0xFFFFCCBC),
                                                     child: const Icon(
@@ -241,11 +310,11 @@ class ResdetailPage extends StatelessWidget {
                                               ),
                                       ),
                                     ),
-                                    // Food details
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
                                           Text(
                                             foodName,
@@ -255,7 +324,7 @@ class ResdetailPage extends StatelessWidget {
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 12,
-                                              color: Color.fromARGB(255, 8, 8, 8),
+                                              color: Colors.black,
                                             ),
                                           ),
                                           const SizedBox(height: 6),
@@ -264,7 +333,7 @@ class ResdetailPage extends StatelessWidget {
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14,
-                                              color: Color.fromARGB(255, 12, 12, 12),
+                                              color: Colors.black,
                                             ),
                                           ),
                                         ],
