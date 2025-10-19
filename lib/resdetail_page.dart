@@ -56,10 +56,10 @@ class _ResdetailPageState extends State<ResdetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3E0),
+     
       appBar: AppBar(
         title: const Text('Restaurant Details'),
-        backgroundColor: const Color(0xFFFF7043),
+        
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance

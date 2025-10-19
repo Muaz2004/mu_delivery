@@ -18,10 +18,8 @@ class _FoodetailPageState extends State<FoodetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3E0),
       appBar: AppBar(
         title: const Text('Food Details', style: TextStyle(color: Colors.white)), // White title for contrast
-        backgroundColor: const Color(0xFFFF7043), // Orange accent
         iconTheme: const IconThemeData(color: Colors.white), // White back button
       ),
       body: StreamBuilder<DocumentSnapshot>(

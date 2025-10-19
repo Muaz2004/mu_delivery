@@ -12,9 +12,7 @@ class OrdersPage extends StatelessWidget {
     const cardColor = Color(0xFFFFAB91); // Slightly lighter matching warm color
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3E0), // soft warm background
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF3E0),
         title: const Text(
           "My Orders",
           style: TextStyle(fontWeight: FontWeight.bold),
