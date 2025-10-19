@@ -31,25 +31,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<ThemeProvider>().isDarkMode;
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
+
       theme: ThemeData(
-        brightness: isDarkMode ? Brightness.dark : Brightness.light,
-        primaryColor: const Color(0xFFFF7043), // main home AppBar color
-        scaffoldBackgroundColor: const Color(0xFFFFF3E0), // body default color
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFFFF3E0), // sub-pages AppBars
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black87),
-          titleTextStyle: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+      brightness: isDarkMode ? Brightness.dark : Brightness.light,
+      primaryColor: const Color(0xFFFF7043), // main home AppBar color
+      scaffoldBackgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
+      appBarTheme: AppBarTheme(
+      backgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
+      elevation: 0,
+      iconTheme: IconThemeData(color: isDarkMode ? Colors.white : Colors.black87),
+      titleTextStyle: TextStyle(
+      color: isDarkMode ? Colors.white : Colors.black87,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+         ),
         ),
-      ),
+     ),
+
       home: const Wrapper(),
     );
   }

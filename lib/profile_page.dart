@@ -253,19 +253,43 @@ class _SettingsPageState extends State<SettingsPage> {
 
               // Logout button
               ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logout'),
-                onTap: () async {
-                  await context.read<myProvider>().signOut();
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Logged out successfully'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout'),
+              onTap: () {
+              showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+              title: const Text('Logout'),
+              content: const Text('Are you sure you want to log out?'),
+              actions: [
+             TextButton(
+             onPressed: () {
+              Navigator.pop(context); // close dialog
+              },
+            child: const Text('No'),
+            ),
+             TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // close dialog first
+              await context.read<myProvider>().signOut();
+              Navigator.of(context).pop();
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Logged out successfully'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            child: const Text('Yes'),
+          ),
+           ],
+        ),
+        );
+      },
+    ),
+
+             
             ],
           ),
         ),
