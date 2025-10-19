@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mu_delivery/mini_screen.dart';
 import 'package:mu_delivery/popular_foods.dart';
 import 'package:mu_delivery/restorant_list.dart';
 
@@ -11,7 +10,6 @@ class ResfoodPage extends StatefulWidget {
 }
 
 class _HomePageState extends State<ResfoodPage> {
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +28,7 @@ class _HomePageState extends State<ResfoodPage> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 200, // give space for image + text
+              height: 200, // keep horizontal popular foods
               child: PopularFoods(),
             ),
             const SizedBox(height: 20),
@@ -42,11 +40,10 @@ class _HomePageState extends State<ResfoodPage> {
               ),
             ),
             const SizedBox(height: 8),
-            RestorantList(),
+            const RestorantList(),
           ],
         ),
       ),
-
     );
   }
 }

@@ -15,8 +15,14 @@ class MiniScreen extends StatelessWidget {
       builder: (context, cartProvider, child) {
         if (cartProvider.totalItems == 0) return const SizedBox.shrink();
 
+        // Dynamically calculate height
+        double calculatedHeight = 60 + (cartProvider.totalItems > 3 ? 120 : 100) + 60;
+        if (calculatedHeight > MediaQuery.of(context).size.height * 0.5) {
+          calculatedHeight = MediaQuery.of(context).size.height * 0.5;
+        }
+
         return Container(
-          height: 120,
+          height: calculatedHeight,
           color: Colors.grey[200],
           padding: const EdgeInsets.all(8),
           child: Column(
@@ -28,22 +34,41 @@ class MiniScreen extends StatelessWidget {
                   itemCount: cartProvider.totalItems,
                   itemBuilder: (context, index) {
                     final item = cartProvider.cartItems[index];
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(item['name'],
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            Text('Qty: ${item['quantity']}'),
-                            Text(
-                                '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}'),
-                          ],
+                    return Stack(
+                      children: [
+                        Card(
+                          margin: const EdgeInsets.all(8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(item['name'],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
+                                Text('Qty: ${item['quantity']}'),
+                                Text(
+                                    '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}'),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        // --- X button per item ---
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () {
+                              cartProvider.removeItem(index); // <-- remove single item
+                            },
+                            child: const CircleAvatar(
+                              radius: 10,
+                              backgroundColor: Colors.red,
+                              child: Icon(Icons.close, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

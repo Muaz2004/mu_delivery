@@ -35,4 +35,10 @@ class CartProvider extends ChangeNotifier {
     }
     return total;
   }
+
+  void removeItem(int index) {
+    if (index >= 0 && index < cartItems.length) {
+      cartItems.removeAt(index);
+      notifyListeners();
+    }}
 }
