@@ -36,20 +36,29 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
 
       theme: ThemeData(
-      brightness: isDarkMode ? Brightness.dark : Brightness.light,
-      primaryColor: const Color(0xFFFF7043), // main home AppBar color
-      scaffoldBackgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
-      appBarTheme: AppBarTheme(
-      backgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
-      elevation: 0,
-      iconTheme: IconThemeData(color: isDarkMode ? Colors.white : Colors.black87),
-      titleTextStyle: TextStyle(
+  brightness: isDarkMode ? Brightness.dark : Brightness.light,
+  primaryColor: const Color(0xFFFF7043), // main home AppBar color
+  scaffoldBackgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
+  appBarTheme: AppBarTheme(
+    backgroundColor: isDarkMode ? Colors.black : const Color(0xFFFFF3E0),
+    elevation: 0,
+    iconTheme: IconThemeData(color: isDarkMode ? Colors.white : Colors.black87),
+    titleTextStyle: TextStyle(
       color: isDarkMode ? Colors.white : Colors.black87,
       fontSize: 20,
       fontWeight: FontWeight.bold,
-         ),
-        ),
-     ),
+    ),
+  ),
+ bottomNavigationBarTheme: BottomNavigationBarThemeData(
+  backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white, // dark gray for dark mode
+  selectedItemColor: const Color(0xFFFF7043), // orange for selected
+  unselectedItemColor: isDarkMode ? Colors.white : Colors.black54, // fully visible unselected
+  selectedLabelStyle: const TextStyle(color: Color(0xFFFF7043)), // label for selected tab
+  unselectedLabelStyle: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black54), // label for unselected
+  showUnselectedLabels: true,
+),
+
+),
 
       home: const Wrapper(),
     );
