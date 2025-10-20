@@ -2,104 +2,150 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class WatchlistPage extends StatelessWidget {
+class WatchlistPage extends StatefulWidget {
   const WatchlistPage({super.key});
 
-  Future<void> removeFromWatchlist(String docId) async {
-    await FirebaseFirestore.instance.collection('watchlist').doc(docId).delete();
+  @override
+  State<WatchlistPage> createState() => _WatchlistPageState();
+}
+
+class _WatchlistPageState extends State<WatchlistPage> {
+  List<Map<String, dynamic>> _items = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWatchlist();
+  }
+
+  Future<void> _loadWatchlist() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final watchlistSnap = await FirebaseFirestore.instance.collection('watchlist').get();
+    final menuSnap = await FirebaseFirestore.instance.collection('menu').get();
+    final restSnap = await FirebaseFirestore.instance.collection('Restorant_table').get();
+
+    final menu = {for (var d in menuSnap.docs) d.id: d.data()};
+    final rests = {for (var d in restSnap.docs) d.id: d.data()};
+
+    final userItems = watchlistSnap.docs.where((doc) {
+      final data = doc.data();
+      return data['userId'] == user.uid;
+    });
+
+    List<Map<String, dynamic>> temp = [];
+    for (var doc in userItems) {
+      final data = doc.data();
+      final type = data['type'];
+      final id = data['itemId'];
+      Map<String, dynamic>? item;
+
+      if (type == 'food') {
+        item = menu[id];
+      } else if (type == 'restorant') {
+        item = rests[id];
+      }
+
+      if (item != null) {
+        temp.add({
+          'id': doc.id,
+          'type': type,
+          'item': item,
+        });
+      }
+    }
+
+    setState(() {
+      _items = temp;
+      _loading = false;
+    });
+  }
+
+  Future<void> _removeItem(String id) async {
+    await FirebaseFirestore.instance.collection('watchlist').doc(id).delete();
+    _loadWatchlist();
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
+    if (_loading) {
       return const Scaffold(
-        body: Center(child: Text('No user logged in')),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final userId = user.uid;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Watchlist'),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFFF7043),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('watchlist')
-            .orderBy('addedAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: _items.isEmpty
+          ? const Center(
+              child: Text(
+                'No items in your watchlist',
+                style: TextStyle(fontSize: 16),
+              ),
+            )
+          : Container(
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: _items.length,
+                itemBuilder: (context, index) {
+                  final entry = _items[index];
+                  final type = entry['type'];
+                  final item = entry['item'];
+                  final name = type == 'food' ? item['f_name'] : item['name'];
+                  final image = type == 'food' ? item['imageurl'] : item['logourl'];
+                  final price = type == 'food' ? item['price']?.toString() : null;
+                  final address = type == 'restorant' ? item['adress'] : null;
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No items in your watchlist.'));
-          }
-
-          // Filter **locally** for the current user
-          final allItems = snapshot.data!.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data['userId'] == userId;
-          }).toList();
-
-          if (allItems.isEmpty) {
-            return const Center(child: Text('No items in your watchlist.'));
-          }
-
-          return ListView.builder(
-            itemCount: allItems.length,
-            itemBuilder: (context, index) {
-              final doc = allItems[index];
-              final data = doc.data() as Map<String, dynamic>;
-              final itemId = data['itemId'] ?? 'Unknown';
-              final type = data['type'] ?? 'unknown';
-
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 3,
-                child: ListTile(
-                  leading: Icon(
-                    type == 'food' ? Icons.fastfood : Icons.store,
-                    color: type == 'food' ? Colors.orange : Colors.green,
-                  ),
-                  title: Text(
-                    type == 'food' ? 'Food Item: $itemId' : 'Restaurant: $itemId',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('Type: $type'),
-                  trailing: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                  return Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(10),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: image != null && image.isNotEmpty
+                            ? Image.network(image, width: 60, height: 60, fit: BoxFit.cover)
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade300,
+                                child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                              ),
+                      ),
+                      title: Text(
+                        name ?? 'Unknown',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          if (type == 'food' && price != null)
+                            Text("💲 Price: $price",
+                                style: TextStyle(color: Colors.grey.shade700)),
+                          if (type == 'restorant' && address != null)
+                            Text("📍 Address: $address",
+                                style: TextStyle(color: Colors.grey.shade700)),
+                          const SizedBox(height: 3),
+                          Text("Type: ${type.toUpperCase()}",
+                              style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () => _removeItem(entry['id']),
+                      ),
                     ),
-                    onPressed: () async {
-                      await removeFromWatchlist(doc.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            type == 'food'
-                                ? 'Food removed from watchlist'
-                                : 'Restaurant removed from watchlist',
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    child: const Text('Remove', style: TextStyle(color: Colors.white)),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

@@ -23,9 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
           'Profile',
           style: TextStyle(color: Colors.black87),
         ),
-        elevation: 2,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: userId == null
           ? const Center(child: Text('No user logged in'))
