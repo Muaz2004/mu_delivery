@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.mu_delivery"
-    compileSdk = 34   // explicitly set compile SDK
+    compileSdk = 35   // updated to 35
     ndkVersion = "27.0.12077973"  // fixed NDK version required by Firebase plugins
 
     compileOptions {
@@ -25,7 +25,7 @@ android {
     defaultConfig {
         applicationId = "com.example.mu_delivery"
         minSdk = 23  // fixed minSdk to satisfy Firebase plugins
-        targetSdk = 34
+        targetSdk = 35   // updated to 35
         versionCode = 1
         versionName = "1.0.0"
     }
