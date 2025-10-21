@@ -36,7 +36,31 @@ Users can browse restaurants, explore menus, add food to their cart, manage favo
 | **Authentication** | Firebase Auth |
 | **Cloud Storage** | Firebase Storage (for food & restaurant images) |
 
----
 
-## ⚙️ Project Structure
+## ⚙️ How to Run
+|
+ Clone the repo:  
+```bash|
+git clone https://github.com/Muaz2004/mu_delivery.git
+cd mu_delivery
+Install dependencies:
 
+bash
+Copy code
+flutter pub get
+Add Firebase config (google-services.json for Android, GoogleService-Info.plist for iOS)
+
+Run the app:
+
+bash
+Copy code
+flutter run
+(Optional) Build APK for Android:
+
+bash
+Copy code
+flutter build apk --release
+📱 Access
+Open the app on your phone
+
+Signup/Login to start using Customer or Admin UI
