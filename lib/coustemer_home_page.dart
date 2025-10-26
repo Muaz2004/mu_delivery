@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mu_delivery/orders_page.dart';
-import 'package:mu_delivery/popular_foods.dart';
-import 'package:mu_delivery/profile_page.dart';
+import 'package:mu_delivery/app_drawer.dart';
 import 'package:mu_delivery/resfood_page.dart';
-import 'package:mu_delivery/restorant_list.dart';
 import 'package:mu_delivery/watchlist_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,10 +15,9 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const ResfoodPage(),
-    const OrdersPage(),
-    const WatchlistPage(), // 3rd tab
-    const ProfilePage(),   // 4th tab
+    const ResfoodPage(),   // Home
+    const OrdersPage(),    // Orders
+    const WatchlistPage(), // Watchlist
   ];
 
   void _onItemTapped(int index) {
@@ -32,42 +29,57 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // =====================
+      // App Bar
+      // =====================
       appBar: AppBar(
         title: const Text(
-          'Food Delivery',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          'Mu Delivery',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.black87,
+          ),
         ),
-        backgroundColor: const Color(0xFFFF7043),
+        backgroundColor: const Color(0xFFFFAB91),
         elevation: 2,
         centerTitle: true,
       ),
-      body: _pages[_currentIndex],
-     bottomNavigationBar: BottomNavigationBar(
-  type: BottomNavigationBarType.fixed, // IMPORTANT for 4+ tabs
-  currentIndex: _currentIndex,
-  onTap: _onItemTapped,
-  selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor,
-  unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.list_alt),
-      label: 'Orders',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.checklist),
-      label: 'Watchlist',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ],
-),
 
+      // =====================
+      // Universal Drawer (Profile + Logout)
+      // =====================
+      drawer: const AppDrawer(),
+
+      // =====================
+      // Page Body
+      // =====================
+      body: _pages[_currentIndex],
+
+      // =====================
+      // Bottom Navigation Bar
+      // =====================
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: const Color(0xFFFF7043),
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: 'Orders',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checklist),
+            label: 'Watchlist',
+          ),
+        ],
+      ),
     );
   }
 }
