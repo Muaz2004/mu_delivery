@@ -6,44 +6,66 @@ class ResfoodPage extends StatefulWidget {
   const ResfoodPage({super.key});
 
   @override
-  State<ResfoodPage> createState() => _HomePageState();
+  State<ResfoodPage> createState() => _ResfoodPageState();
 }
 
-class _HomePageState extends State<ResfoodPage> {
+class _ResfoodPageState extends State<ResfoodPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
+      backgroundColor: const Color(0xFFF8F9FA), // Subtle grey background for contrast
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "Discover",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 28),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Popular Foods",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 200, // keep horizontal popular foods
+            const SizedBox(height: 10),
+            _buildSectionHeader("Popular Foods", "View all"),
+            const SizedBox(height: 12),
+            const SizedBox(
+              height: 210, // Adjusted height for new card style
               child: PopularFoods(),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Restaurants",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 30),
+            _buildSectionHeader("Nearby Restaurants", ""),
+            const SizedBox(height: 12),
             const RestorantList(),
+            const SizedBox(height: 20),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String actionText) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+        ),
+        if (actionText.isNotEmpty)
+          Text(
+            actionText,
+            style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w600),
+          ),
+      ],
     );
   }
 }
