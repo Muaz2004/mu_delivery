@@ -70,82 +70,140 @@ class _WatchlistPageState extends State<WatchlistPage> {
 
   @override
   Widget build(BuildContext context) {
+    const Color brandOrange = Color(0xFFFF7043);
+    const Color textPrimary = Color(0xFF2D2D2D);
+
     if (_loading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator(color: brandOrange)),
       );
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF7043),
-        title: const Text('My Watchlist'),
+        backgroundColor: brandOrange,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'My Watchlist',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 22),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _items.isEmpty
-          ? const Center(
-              child: Text(
-                'No items in your watchlist',
-                style: TextStyle(fontSize: 16),
-              ),
-            )
-          : Container(
-              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.1),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(10),
-                itemCount: _items.length,
-                itemBuilder: (context, index) {
-                  final entry = _items[index];
-                  final type = entry['type'];
-                  final item = entry['item'];
-                  final name = type == 'food' ? item['f_name'] : item['name'];
-                  final image = type == 'food' ? item['imageurl'] : item['logourl'];
-                  final price = type == 'food' ? item['price']?.toString() : null;
-                  final address = type == 'restorant' ? item['adress'] : null;
+          ? const Center(child: Text('No items in your watchlist'))
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              physics: const BouncingScrollPhysics(),
+              itemCount: _items.length,
+              itemBuilder: (context, index) {
+                final entry = _items[index];
+                final type = entry['type'];
+                final item = entry['item'];
+                final name = type == 'food' ? item['f_name'] : item['name'];
+                final image = type == 'food' ? item['imageurl'] : item['logourl'];
+                final price = type == 'food' ? item['price']?.toString() : null;
+                final address = type == 'restorant' ? item['adress'] : null;
 
-                  return Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(10),
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: image != null && image.isNotEmpty
-                            ? Image.network(image, width: 60, height: 60, fit: BoxFit.cover)
-                            : Container(
-                                width: 60,
-                                height: 60,
-                                color: Colors.grey.shade300,
-                                child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                              ),
+                return Container(
+                  // MADE THE CARDS TALLER VIA MARGIN AND PADDING
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
-                      title: Text(
-                        name ?? 'Unknown',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: IntrinsicHeight( // Ensures the card stretches to fit content beautifully
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 5),
-                          if (type == 'food' && price != null)
-                            Text("💲 Price: $price",
-                                style: TextStyle(color: Colors.grey.shade700)),
-                          if (type == 'restorant' && address != null)
-                            Text("📍 Address: $address",
-                                style: TextStyle(color: Colors.grey.shade700)),
-                          const SizedBox(height: 3),
-                          Text("Type: ${type.toUpperCase()}",
-                              style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          // LARGE IMAGE SECTION
+                          SizedBox(
+                            width: 120, // Increased width for a "Taller" feel
+                            child: image != null && image.isNotEmpty
+                                ? Image.network(image, fit: BoxFit.cover)
+                                : Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.image_not_supported),
+                                  ),
+                          ),
+                          // CONTENT SECTION
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0), // Extra padding for height
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    name ?? 'Unknown',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                      color: textPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (type == 'food' && price != null)
+                                    Text(
+                                      "\$$price",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: brandOrange,
+                                      ),
+                                    ),
+                                  if (type == 'restorant' && address != null)
+                                    Text(
+                                      address,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                                    ),
+                                  const SizedBox(height: 10),
+                                  // SMALL PILL FOR TYPE
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      type.toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // ACTIONS SECTION
+                          IconButton(
+                            padding: const EdgeInsets.only(right: 12),
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                            onPressed: () => _removeItem(entry['id']),
+                          ),
                         ],
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () => _removeItem(entry['id']),
-                      ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
     );
   }
