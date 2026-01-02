@@ -78,6 +78,7 @@ class _WatchlistPageState extends State<WatchlistPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFFF7043),
         title: const Text('My Watchlist'),
       ),
       body: _items.isEmpty

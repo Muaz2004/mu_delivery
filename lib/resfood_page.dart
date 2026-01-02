@@ -15,7 +15,7 @@ class _ResfoodPageState extends State<ResfoodPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // Subtle grey background for contrast
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFF7043),
         elevation: 0,
         title: const Text(
           "Discover",

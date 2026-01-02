@@ -14,7 +14,7 @@ class OrdersPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), 
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFF7043),
         elevation: 0,
         centerTitle: true,
         title: const Text(

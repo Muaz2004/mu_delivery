@@ -15,9 +15,9 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const ResfoodPage(),   // Home
-    const OrdersPage(),    // Orders
-    const WatchlistPage(), // Watchlist
+    const ResfoodPage(),   
+    const OrdersPage(),    
+    const WatchlistPage(), 
   ];
 
   void _onItemTapped(int index) {
@@ -28,58 +28,75 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // =====================
-      // App Bar
-      // =====================
-      appBar: AppBar(
-        title: const Text(
-          'Mu Delivery',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: Colors.black87,
-          ),
-        ),
-        backgroundColor: const Color(0xFFFFAB91),
-        elevation: 2,
-        centerTitle: true,
-      ),
+    // 2025 Food App Theme Colors
+    const Color activeColor = Color(0xFFFF7043); // Your signature orange
+    const Color inactiveColor = Color(0xFF9E9E9E); // Clean medium grey
 
-      // =====================
-      // Universal Drawer (Profile + Logout)
-      // =====================
+    return Scaffold(
+      // The drawer can be opened by swiping or a menu button on sub-pages
       drawer: const AppDrawer(),
 
-      // =====================
-      // Page Body
-      // =====================
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
 
       // =====================
-      // Bottom Navigation Bar
+      // Modern Food App Style Bottom Bar
       // =====================
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: const Color(0xFFFF7043),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.withOpacity(0.1), // Subtle top line
+              width: 1,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'Orders',
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03), // Very soft shadow
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: BottomNavigationBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _currentIndex,
+              onTap: _onItemTapped,
+              selectedItemColor: activeColor,
+              unselectedItemColor: inactiveColor,
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              showUnselectedLabels: true,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+              items: [
+                _buildNavItem(Icons.grid_view_rounded, Icons.grid_view_outlined, 'Home', 0),
+                _buildNavItem(Icons.shopping_bag, Icons.shopping_bag_outlined, 'Orders', 1),
+                _buildNavItem(Icons.favorite, Icons.favorite_outline_rounded, 'Watchlist', 2),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
-            label: 'Watchlist',
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  // Helper to switch between solid and outlined icons based on selection
+  BottomNavigationBarItem _buildNavItem(IconData activeIcon, IconData inactiveIcon, String label, int index) {
+    return BottomNavigationBarItem(
+      icon: Icon(
+        _currentIndex == index ? activeIcon : inactiveIcon,
+        size: 26,
+      ),
+      label: label,
     );
   }
 }
