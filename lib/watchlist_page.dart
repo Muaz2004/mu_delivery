@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mu_delivery/globals.dart';
 
 class WatchlistPage extends StatefulWidget {
   const WatchlistPage({super.key});
@@ -82,6 +83,13 @@ class _WatchlistPageState extends State<WatchlistPage> {
         backgroundColor: brandOrange,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Colors.white),
+          onPressed: () {
+            // This uses the remote control to open the drawer
+            scaffoldKey.currentState?.openDrawer();
+          },
+        ),
         title: const Text(
           'My Watchlist',
           style: TextStyle(

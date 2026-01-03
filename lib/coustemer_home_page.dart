@@ -3,6 +3,8 @@ import 'package:mu_delivery/orders_page.dart';
 import 'package:mu_delivery/app_drawer.dart';
 import 'package:mu_delivery/resfood_page.dart';
 import 'package:mu_delivery/watchlist_page.dart';
+import 'package:mu_delivery/globals.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,6 +36,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       // The drawer can be opened by swiping or a menu button on sub-pages
+      key: scaffoldKey,
       drawer: const AppDrawer(),
 
       body: IndexedStack(

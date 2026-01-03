@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mu_delivery/globals.dart';
 
 class OrdersPage extends StatelessWidget {
   const OrdersPage({super.key});
@@ -18,6 +19,13 @@ class OrdersPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Colors.white),
+          onPressed: () {
+            // This uses the remote control to open the drawer
+            scaffoldKey.currentState?.openDrawer();
+          },
+        ),
         title: const Text(
           "My Orders",
           style: TextStyle(

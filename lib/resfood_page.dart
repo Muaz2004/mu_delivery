@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mu_delivery/popular_foods.dart';
 import 'package:mu_delivery/restorant_list.dart';
+import 'package:mu_delivery/globals.dart';
 
 class ResfoodPage extends StatefulWidget {
   const ResfoodPage({super.key});
@@ -17,6 +18,13 @@ class _ResfoodPageState extends State<ResfoodPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFF7043),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: Colors.white),
+          onPressed: () {
+            // This uses the remote control to open the drawer
+            scaffoldKey.currentState?.openDrawer();
+          },
+        ),
         title: const Text(
           "Discover",
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 28),
