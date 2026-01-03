@@ -9,20 +9,21 @@ class OrdersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color textPrimary = Color(0xFF2D2D2D);
-    const Color accentColor = Colors.orangeAccent;
+    const Color brandOrange = Color(0xFFFF7043);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), 
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF7043),
+        backgroundColor: brandOrange,
         elevation: 0,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           "My Orders",
           style: TextStyle(
-            color: textPrimary, 
-            fontWeight: FontWeight.w900, 
-            fontSize: 24,
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
             letterSpacing: -0.5,
           ),
         ),
@@ -34,11 +35,11 @@ class OrdersPage extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: accentColor));
+            return const Center(child: CircularProgressIndicator(color: brandOrange));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No orders found."));
+            return _buildEmptyState("No orders found.");
           }
 
           final currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -47,7 +48,7 @@ class OrdersPage extends StatelessWidget {
               .toList();
 
           if (orders.isEmpty) {
-            return const Center(child: Text("No orders found for you."));
+            return _buildEmptyState("No orders found for you.");
           }
 
           return ListView.builder(
@@ -55,7 +56,8 @@ class OrdersPage extends StatelessWidget {
             physics: const BouncingScrollPhysics(),
             itemCount: orders.length,
             itemBuilder: (context, index) {
-              final order = orders[index].data() as Map<String, dynamic>;
+              final orderDoc = orders[index];
+              final order = orderDoc.data() as Map<String, dynamic>;
               final orderTime = (order['orderTime'] as Timestamp?)?.toDate();
               final formattedDate = orderTime != null
                   ? DateFormat('MMM dd, yyyy • hh:mm a').format(orderTime)
@@ -64,78 +66,103 @@ class OrdersPage extends StatelessWidget {
               final status = order['status'] ?? 'Pending';
 
               return Container(
-                margin: const EdgeInsets.only(bottom: 20),
+                margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.04),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Theme(
-                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  ),
                   child: ExpansionTile(
-                    // THIS SECTION MAKES THE INITIAL CARD TALLER
-                    tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25), 
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: brandOrange.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.receipt_long_rounded, color: brandOrange, size: 20),
+                    ),
                     title: Text(
-                      "Order #${orders[index].id.substring(0, 5).toUpperCase()}",
+                      "Order #${orderDoc.id.substring(0, 5).toUpperCase()}",
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold, 
-                        fontSize: 18, 
-                        color: textPrimary
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: textPrimary,
                       ),
                     ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        formattedDate,
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
-                      ),
+                    subtitle: Text(
+                      formattedDate,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
                     trailing: _buildStatusChip(status),
                     
-                    // THIS SECTION IS THE EXPANDED PART (KEEPS IT COMPACT)
+                    // COMPACT EXPANDED CONTENT
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), // Reduced bottom padding
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Divider(height: 1),
-                            const SizedBox(height: 12),
+                            Divider(color: Colors.grey[100], thickness: 1),
+                            const SizedBox(height: 8), // Reduced spacing
                             ...items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  padding: const EdgeInsets.symmetric(vertical: 2), // Tighter item list
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
+                                      Container(
+                                        width: 5,
+                                        height: 5,
+                                        decoration: const BoxDecoration(color: brandOrange, shape: BoxShape.circle),
+                                      ),
+                                      const SizedBox(width: 8),
                                       Text(
-                                        "${item['name']} x${item['quantity']}",
-                                        style: const TextStyle(color: textPrimary, fontSize: 14),
+                                        "${item['name']}",
+                                        style: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        "x${item['quantity']}",
+                                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ],
                                   ),
                                 )),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  "Total",
-                                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
-                                ),
-                                Text(
-                                  "\$${order['totalPrice'] ?? 0}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900, 
-                                    fontSize: 18, 
-                                    color: accentColor
+                            const SizedBox(height: 10), // Reduced spacing
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Slimmer Total Box
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFBFBFB),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Total Paid",
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 13),
                                   ),
-                                ),
-                              ],
+                                  Text(
+                                    "\$${order['totalPrice'] ?? 0}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 17,
+                                      color: textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -153,25 +180,55 @@ class OrdersPage extends StatelessWidget {
 
   Widget _buildStatusChip(String status) {
     Color chipColor;
+    IconData statusIcon;
+    
     switch (status.toLowerCase()) {
-      case 'delivered': chipColor = Colors.green; break;
-      case 'on the way': chipColor = Colors.blue; break;
-      default: chipColor = Colors.orange;
+      case 'delivered':
+        chipColor = const Color(0xFF4CAF50);
+        statusIcon = Icons.check_circle_rounded;
+        break;
+      case 'on the way':
+        chipColor = const Color(0xFF2196F3);
+        statusIcon = Icons.local_shipping_rounded;
+        break;
+      default:
+        chipColor = const Color(0xFFFF9800);
+        statusIcon = Icons.access_time_filled_rounded;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: chipColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: chipColor,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(statusIcon, size: 11, color: chipColor),
+          const SizedBox(width: 4),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              color: chipColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_bag_outlined, size: 60, color: Colors.grey[300]),
+          const SizedBox(height: 12),
+          Text(message, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
