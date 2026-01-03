@@ -9,11 +9,18 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color textPrimary = Color(0xFF2D2D2D);
+    // 1. DETECT THEME
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color brandOrange = Color(0xFFFF7043);
+    
+    // 2. DEFINE DYNAMIC COLORS
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textPrimary = isDark ? Colors.white : const Color(0xFF2D2D2D);
+    final Color subBoxColor = isDark ? Colors.black.withOpacity(0.3) : const Color(0xFFFBFBFB);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: brandOrange,
         elevation: 0,
@@ -22,7 +29,6 @@ class OrdersPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded, color: Colors.white),
           onPressed: () {
-            // This uses the remote control to open the drawer
             scaffoldKey.currentState?.openDrawer();
           },
         ),
@@ -47,7 +53,7 @@ class OrdersPage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return _buildEmptyState("No orders found.");
+            return _buildEmptyState("No orders found.", isDark);
           }
 
           final currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -56,7 +62,7 @@ class OrdersPage extends StatelessWidget {
               .toList();
 
           if (orders.isEmpty) {
-            return _buildEmptyState("No orders found for you.");
+            return _buildEmptyState("No orders found for you.", isDark);
           }
 
           return ListView.builder(
@@ -76,11 +82,11 @@ class OrdersPage extends StatelessWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor, // DYNAMIC CARD COLOR
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.04),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -91,42 +97,42 @@ class OrdersPage extends StatelessWidget {
                     dividerColor: Colors.transparent,
                     splashColor: Colors.transparent,
                     highlightColor: Colors.transparent,
+                    // Fixes expansion arrow color in dark mode
+                    unselectedWidgetColor: Colors.grey[500], 
                   ),
                   child: ExpansionTile(
                     tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     leading: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: brandOrange.withOpacity(0.1),
+                        color: brandOrange.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.receipt_long_rounded, color: brandOrange, size: 20),
                     ),
                     title: Text(
                       "Order #${orderDoc.id.substring(0, 5).toUpperCase()}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
-                        color: textPrimary,
+                        color: textPrimary, // DYNAMIC TEXT COLOR
                       ),
                     ),
                     subtitle: Text(
                       formattedDate,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[500]),
                     ),
                     trailing: _buildStatusChip(status),
-                    
-                    // COMPACT EXPANDED CONTENT
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12), // Reduced bottom padding
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Divider(color: Colors.grey[100], thickness: 1),
-                            const SizedBox(height: 8), // Reduced spacing
+                            Divider(color: isDark ? Colors.white10 : Colors.grey[100], thickness: 1),
+                            const SizedBox(height: 8),
                             ...items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2), // Tighter item list
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
                                   child: Row(
                                     children: [
                                       Container(
@@ -137,7 +143,11 @@ class OrdersPage extends StatelessWidget {
                                       const SizedBox(width: 8),
                                       Text(
                                         "${item['name']}",
-                                        style: const TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 13),
+                                        style: TextStyle(
+                                          color: textPrimary, 
+                                          fontWeight: FontWeight.w600, 
+                                          fontSize: 13
+                                        ),
                                       ),
                                       const Spacer(),
                                       Text(
@@ -147,11 +157,11 @@ class OrdersPage extends StatelessWidget {
                                     ],
                                   ),
                                 )),
-                            const SizedBox(height: 10), // Reduced spacing
+                            const SizedBox(height: 10),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Slimmer Total Box
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFBFBFB),
+                                color: subBoxColor, // DYNAMIC TOTAL BOX COLOR
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Row(
@@ -163,7 +173,7 @@ class OrdersPage extends StatelessWidget {
                                   ),
                                   Text(
                                     "\$${order['totalPrice'] ?? 0}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 17,
                                       color: textPrimary,
@@ -207,7 +217,7 @@ class OrdersPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.1),
+        color: chipColor.withOpacity(0.15),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -228,14 +238,14 @@ class OrdersPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_bag_outlined, size: 60, color: Colors.grey[300]),
+          Icon(Icons.shopping_bag_outlined, size: 60, color: isDark ? Colors.grey[800] : Colors.grey[300]),
           const SizedBox(height: 12),
-          Text(message, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+          Text(message, style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey, fontWeight: FontWeight.w500)),
         ],
       ),
     );

@@ -5,7 +5,6 @@ import 'package:mu_delivery/resfood_page.dart';
 import 'package:mu_delivery/watchlist_page.dart';
 import 'package:mu_delivery/globals.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -30,12 +29,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // 2025 Food App Theme Colors
-    const Color activeColor = Color(0xFFFF7043); // Your signature orange
-    const Color inactiveColor = Color(0xFF9E9E9E); // Clean medium grey
+    // 1. THEME DETECTION
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // 2. DYNAMIC COLORS
+    const Color activeColor = Color(0xFFFF7043); 
+    final Color inactiveColor = isDark ? Colors.grey[600]! : const Color(0xFF9E9E9E);
+    final Color navBarBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color borderColor = isDark ? Colors.white10 : Colors.grey.withOpacity(0.1);
 
     return Scaffold(
-      // The drawer can be opened by swiping or a menu button on sub-pages
       key: scaffoldKey,
       drawer: const AppDrawer(),
 
@@ -44,21 +47,18 @@ class _HomePageState extends State<HomePage> {
         children: _pages,
       ),
 
-      // =====================
-      // Modern Food App Style Bottom Bar
-      // =====================
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: navBarBg, // ADAPTIVE BACKGROUND
           border: Border(
             top: BorderSide(
-              color: Colors.grey.withOpacity(0.1), // Subtle top line
+              color: borderColor, // ADAPTIVE TOP LINE
               width: 1,
             ),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03), // Very soft shadow
+              color: isDark ? Colors.black26 : Colors.black.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.only(top: 8.0),
             child: BottomNavigationBar(
               elevation: 0,
-              backgroundColor: Colors.transparent,
+              backgroundColor: Colors.transparent, // Let Container handle background
               type: BottomNavigationBarType.fixed,
               currentIndex: _currentIndex,
               onTap: _onItemTapped,
@@ -92,7 +92,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper to switch between solid and outlined icons based on selection
   BottomNavigationBarItem _buildNavItem(IconData activeIcon, IconData inactiveIcon, String label, int index) {
     return BottomNavigationBarItem(
       icon: Icon(

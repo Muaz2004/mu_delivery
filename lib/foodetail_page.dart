@@ -26,28 +26,31 @@ class _FoodetailPageState extends State<FoodetailPage> {
   Future<void> checkWatchlistStatus() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
     final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
     final existing = await watchlistRef
         .where('userId', isEqualTo: user.uid)
         .where('itemId', isEqualTo: widget.foodId)
         .where('type', isEqualTo: "food")
         .get();
-
     if (mounted) {
-      setState(() {
-        isInWatchlist = existing.docs.isNotEmpty;
-      });
+      setState(() => isInWatchlist = existing.docs.isNotEmpty);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 1. THEME DETECTION
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color brandOrange = Color(0xFFFF7043);
 
+    // 2. DYNAMIC COLORS
+    final Color sheetColor = isDark ? const Color(0xFF121212) : Colors.white;
+    final Color textPrimary = isDark ? Colors.white : const Color(0xFF2D2D2D);
+    final Color textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final Color iconBtnBg = isDark ? Colors.grey[900]! : Colors.white;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      // Transparent AppBar to show image behind it
+      backgroundColor: sheetColor,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -55,19 +58,21 @@ class _FoodetailPageState extends State<FoodetailPage> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: BackButton(color: Colors.black),
+            backgroundColor: iconBtnBg,
+            child: BackButton(color: isDark ? Colors.white : Colors.black),
           ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: CircleAvatar(
-              backgroundColor: Colors.white,
+              backgroundColor: iconBtnBg,
               child: IconButton(
                 icon: Icon(
                   isInWatchlist ? Icons.favorite : Icons.favorite_border,
-                  color: isInWatchlist ? Colors.red : Colors.grey,
+                  color: isInWatchlist
+                      ? Colors.red
+                      : (isDark ? Colors.white54 : Colors.grey),
                 ),
                 onPressed: () async {
                   await addToWatchlist(widget.foodId, "food");
@@ -79,36 +84,42 @@ class _FoodetailPageState extends State<FoodetailPage> {
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('menu').doc(widget.foodId).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('menu')
+            .doc(widget.foodId)
+            .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: brandOrange));
-          
+          if (!snapshot.hasData) {
+            return const Center(
+                child: CircularProgressIndicator(color: brandOrange));
+          }
+
           final foodData = snapshot.data!.data() as Map<String, dynamic>;
           final price = (foodData['price'] as num?)?.toDouble() ?? 0.0;
-          final restaurantId = (foodData['restaurantId'] as DocumentReference).id;
+          final restaurantId =
+              (foodData['restaurantId'] as DocumentReference).id;
 
           return Stack(
             children: [
               Column(
                 children: [
-                  // 1. RESIZED HERO IMAGE
                   SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.4, // 40% of screen height
+                    height: MediaQuery.of(context).size.height * 0.4,
                     width: double.infinity,
                     child: Image.network(
                       foodData['imageurl'] ?? '',
                       fit: BoxFit.cover,
                     ),
                   ),
-                  
-                  // 2. CONTENT SHEET
+                  // CONTENT SHEET
                   Expanded(
                     child: Container(
                       width: double.infinity,
-                      transform: Matrix4.translationValues(0, -30, 0), // Overlap effect
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                      transform: Matrix4.translationValues(0, -30, 0),
+                      decoration: BoxDecoration(
+                        color: sheetColor,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(32)),
                       ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(24, 32, 24, 100),
@@ -121,39 +132,63 @@ class _FoodetailPageState extends State<FoodetailPage> {
                                 Expanded(
                                   child: Text(
                                     foodData['f_name'] ?? 'Food Name',
-                                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.5,
+                                      color: textPrimary,
+                                    ),
                                   ),
                                 ),
                                 Text(
                                   '\$${price.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: brandOrange),
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w900,
+                                      color: brandOrange),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              foodData['description'] ?? 'Delicious food prepared with fresh ingredients.',
-                              style: TextStyle(fontSize: 16, color: Colors.grey[600], height: 1.5),
+                              foodData['description'] ??
+                                  'Delicious food prepared with fresh ingredients.',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: textSecondary,
+                                  height: 1.5),
                             ),
                             const SizedBox(height: 32),
-                            
-                            // 3. QUANTITY SELECTOR
-                            const Text("Quantity", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            // QUANTITY SELECTOR
+                            Text("Quantity",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: textPrimary)),
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                _buildQtyBtn(Icons.remove, () {
+                                _buildQtyBtn(Icons.remove, isDark, () {
                                   if (quantity > 1) setState(() => quantity--);
                                 }),
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text('$quantity', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Text('$quantity',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: textPrimary)),
                                 ),
-                                _buildQtyBtn(Icons.add, () => setState(() => quantity++)),
+                                _buildQtyBtn(Icons.add, isDark,
+                                    () => setState(() => quantity++)),
                                 const Spacer(),
                                 Text(
                                   'Total: \$${(price * quantity).toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: textPrimary),
                                 ),
                               ],
                             ),
@@ -164,8 +199,7 @@ class _FoodetailPageState extends State<FoodetailPage> {
                   ),
                 ],
               ),
-              
-              // 4. FLOATING BOTTOM BAR (Add to Cart)
+              // FLOATING BOTTOM BAR
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -173,8 +207,16 @@ class _FoodetailPageState extends State<FoodetailPage> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+                    color: sheetColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black45
+                            : Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      )
+                    ],
                   ),
                   child: SafeArea(
                     top: false,
@@ -185,16 +227,21 @@ class _FoodetailPageState extends State<FoodetailPage> {
                           width: double.infinity,
                           height: 55,
                           child: ElevatedButton(
-                            onPressed: () => _handleAddToCart(context, foodData, price, restaurantId),
+                            onPressed: () => _handleAddToCart(
+                                context, foodData, price, restaurantId),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: brandOrange,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18)),
                               elevation: 0,
                             ),
-                            child: const Text('Add to Cart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                            child: const Text('Add to Cart',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
                           ),
                         ),
-                        // Show MiniScreen if cart not empty
                         Consumer<CartProvider>(
                           builder: (context, cart, child) {
                             if (cart.cartItems.isEmpty) return const SizedBox();
@@ -216,22 +263,26 @@ class _FoodetailPageState extends State<FoodetailPage> {
     );
   }
 
-  Widget _buildQtyBtn(IconData icon, VoidCallback onTap) {
+  Widget _buildQtyBtn(IconData icon, bool isDark, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: isDark ? Colors.white12 : Colors.grey[300]!),
           borderRadius: BorderRadius.circular(12),
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.transparent,
         ),
-        child: Icon(icon, size: 20, color: Colors.black),
+        child: Icon(icon, size: 20, color: isDark ? Colors.white : Colors.black),
       ),
     );
   }
 
-  void _handleAddToCart(BuildContext context, Map<String, dynamic> foodData, double price, String restaurantId) {
+  void _handleAddToCart(BuildContext context, Map<String, dynamic> foodData,
+      double price, String restaurantId) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     final foodItem = {
       'foodId': widget.foodId,
       'name': foodData['f_name'] ?? 'No Name',
@@ -241,7 +292,8 @@ class _FoodetailPageState extends State<FoodetailPage> {
       'imageUrl': foodData['imageurl'] ?? '',
     };
 
-    final index = cartProvider.cartItems.indexWhere((item) => item['foodId'] == widget.foodId);
+    final index = cartProvider.cartItems
+        .indexWhere((item) => item['foodId'] == widget.foodId);
     if (index >= 0) {
       cartProvider.cartItems[index]['quantity'] += quantity;
       cartProvider.notifyListeners();
@@ -249,29 +301,35 @@ class _FoodetailPageState extends State<FoodetailPage> {
       cartProvider.addToCart(foodItem);
     }
 
+    // FIX: Dynamic SnackBar colors for Dark Mode visibility
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Added $quantity x ${foodData['f_name']}'),
+        content: Text(
+          'Added $quantity x ${foodData['f_name']}',
+          style: TextStyle(
+            color: isDark ? Colors.black : Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF2D2D2D),
+        backgroundColor: isDark ? Colors.white : const Color(0xFF2D2D2D),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
       ),
     );
+
     setState(() => quantity = 1);
   }
 }
 
-// Keep the logic-only addToWatchlist exactly as you had it
 Future<void> addToWatchlist(String itemId, String type) async {
   final userId = FirebaseAuth.instance.currentUser!.uid;
   final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
-
   final existing = await watchlistRef
       .where('userId', isEqualTo: userId)
       .where('itemId', isEqualTo: itemId)
       .where('type', isEqualTo: type)
       .get();
-
   if (existing.docs.isEmpty) {
     await watchlistRef.add({
       'userId': userId,

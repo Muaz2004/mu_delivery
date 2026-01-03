@@ -13,25 +13,36 @@ class ResfoodPage extends StatefulWidget {
 class _ResfoodPageState extends State<ResfoodPage> {
   @override
   Widget build(BuildContext context) {
+    // 1. DETECT THEME MODE
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    const Color brandOrange = Color(0xFFFF7043);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Subtle grey background for contrast
+      // 2. ADAPTIVE BACKGROUND COLOR
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+      
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFF7043),
+        backgroundColor: brandOrange,
         elevation: 0,
+        centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.menu_rounded, color: Colors.white),
           onPressed: () {
-            // This uses the remote control to open the drawer
             scaffoldKey.currentState?.openDrawer();
           },
         ),
-        title: const Text(
+        title: Text(
           "Discover",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 28),
+          style: TextStyle(
+            // Use white text on the orange AppBar for better contrast in both modes
+            color: Colors.white, 
+            fontWeight: FontWeight.w900, 
+            fontSize: 24,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded, color: Colors.black),
+            icon: const Icon(Icons.search_rounded, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -42,15 +53,15 @@ class _ResfoodPageState extends State<ResfoodPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
-            _buildSectionHeader("Popular Foods", "View all"),
+            const SizedBox(height: 20),
+            _buildSectionHeader("Popular Foods", "View all", isDark),
             const SizedBox(height: 12),
             const SizedBox(
-              height: 210, // Adjusted height for new card style
+              height: 210, 
               child: PopularFoods(),
             ),
             const SizedBox(height: 30),
-            _buildSectionHeader("Nearby Restaurants", ""),
+            _buildSectionHeader("Nearby Restaurants", "", isDark),
             const SizedBox(height: 12),
             const RestorantList(),
             const SizedBox(height: 20),
@@ -60,18 +71,28 @@ class _ResfoodPageState extends State<ResfoodPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, String actionText) {
+  // 3. PASS isDark TO THE HEADER HELPER
+  Widget _buildSectionHeader(String title, String actionText, bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: -0.5),
+          style: TextStyle(
+            fontSize: 20, 
+            fontWeight: FontWeight.bold, 
+            letterSpacing: -0.5,
+            // ADAPTIVE TITLE COLOR
+            color: isDark ? Colors.white : Colors.black,
+          ),
         ),
         if (actionText.isNotEmpty)
           Text(
             actionText,
-            style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Color(0xFFFF7043), // Use brand color instead of yellow-orange
+              fontWeight: FontWeight.w600,
+            ),
           ),
       ],
     );

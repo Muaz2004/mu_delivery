@@ -1,4 +1,4 @@
-import 'dart:ui'; // Required for ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mu_delivery/resdetail_page.dart';
@@ -9,6 +9,8 @@ class RestorantList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color brandOrange = Color(0xFFFF7043);
+    // DETECT DARK MODE
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('Restorant_table').snapshots(),
@@ -26,9 +28,9 @@ class RestorantList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 25, 
+            mainAxisSpacing: 25,
             crossAxisSpacing: 18,
-            childAspectRatio: 0.82, // Slightly adjusted for better balance
+            childAspectRatio: 0.82,
           ),
           itemBuilder: (context, index) {
             final doc = restaurants[index];
@@ -42,11 +44,12 @@ class RestorantList extends StatelessWidget {
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  // THEME AWARE CARD COLOR
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: isDark ? Colors.black.withOpacity(0.25) : Colors.black.withOpacity(0.04),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -55,7 +58,6 @@ class RestorantList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // TOP IMAGE SECTION
                     Expanded(
                       flex: 4,
                       child: Stack(
@@ -65,15 +67,11 @@ class RestorantList extends StatelessWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
                               image: imageUrl.isNotEmpty
-                                  ? DecorationImage(
-                                      image: NetworkImage(imageUrl), 
-                                      fit: BoxFit.cover
-                                    )
+                                  ? DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover)
                                   : null,
-                              color: Colors.grey[100],
+                              color: isDark ? Colors.grey[850] : Colors.grey[100],
                             ),
                           ),
-                          // FIXED RATING BADGE: Using ClipRRect + BackdropFilter
                           Positioned(
                             top: 15,
                             right: 15,
@@ -83,7 +81,7 @@ class RestorantList extends StatelessWidget {
                                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  color: Colors.black.withOpacity(0.4),
+                                  color: Colors.black.withOpacity(0.5),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -92,9 +90,9 @@ class RestorantList extends StatelessWidget {
                                       Text(
                                         "${(data['rating'] ?? 0).toDouble()}",
                                         style: const TextStyle(
-                                          fontSize: 11, 
-                                          fontWeight: FontWeight.w900, 
-                                          color: Colors.white
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ],
@@ -106,8 +104,6 @@ class RestorantList extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
-                    // CONTENT SECTION
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -118,10 +114,11 @@ class RestorantList extends StatelessWidget {
                           children: [
                             Text(
                               data['name'] ?? 'Restaurant',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900, 
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
                                 fontSize: 16,
-                                color: Color(0xFF2D2D2D),
+                                // THEME AWARE TEXT COLOR
+                                color: isDark ? Colors.white : const Color(0xFF2D2D2D),
                                 letterSpacing: -0.5,
                               ),
                               maxLines: 1,
@@ -129,15 +126,18 @@ class RestorantList extends StatelessWidget {
                             ),
                             Row(
                               children: [
-                                Icon(Icons.access_time_filled_rounded, size: 14, color: brandOrange.withOpacity(0.7)),
+                                Icon(Icons.access_time_filled_rounded, size: 14, color: brandOrange.withOpacity(0.9)),
                                 const SizedBox(width: 4),
-                                const Text(
+                                Text(
                                   "25 min",
-                                  style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.grey[400] : Colors.grey,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const Spacer(),
-                                // Arrow icon to indicate it's clickable
-                                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Colors.grey),
+                                Icon(Icons.arrow_forward_ios_rounded, size: 10, color: isDark ? Colors.grey[600] : Colors.grey),
                               ],
                             ),
                           ],
