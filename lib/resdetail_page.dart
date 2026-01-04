@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class ResdetailPage extends StatefulWidget {
   final String restaurantId;
-
   const ResdetailPage({super.key, required this.restaurantId});
 
   @override
@@ -13,8 +12,8 @@ class ResdetailPage extends StatefulWidget {
 }
 
 class _ResdetailPageState extends State<ResdetailPage> {
-  double? userRating; // store current user's rating
-  bool isInWatchlist = false; // new state for watchlist button
+  double? userRating;
+  bool isInWatchlist = false;
 
   @override
   void initState() {
@@ -22,7 +21,6 @@ class _ResdetailPageState extends State<ResdetailPage> {
     checkWatchlistStatus();
   }
 
-  // save rating to Firestore
   Future<void> _rateRestaurant(double rating) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
@@ -35,7 +33,6 @@ class _ResdetailPageState extends State<ResdetailPage> {
 
     await ratingRef.set({'rating': rating});
 
-    // recalculate the average
     final allRatings = await FirebaseFirestore.instance
         .collection('Restorant_table')
         .doc(widget.restaurantId)
@@ -55,31 +52,49 @@ class _ResdetailPageState extends State<ResdetailPage> {
           .update({'rating': avg});
     }
 
-    setState(() {
-      userRating = rating;
-    });
+    setState(() => userRating = rating);
   }
 
   Future<void> checkWatchlistStatus() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
     final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
 
     final existing = await watchlistRef
-        .where('userId', isEqualTo: userId)
+        .where('userId', isEqualTo: user.uid)
         .where('itemId', isEqualTo: widget.restaurantId)
         .where('type', isEqualTo: "restorant")
         .get();
 
-    setState(() {
-      isInWatchlist = existing.docs.isNotEmpty;
-    });
+  if (mounted) {
+      setState(() => isInWatchlist = existing.docs.isNotEmpty);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    const Color brandOrange = Color(0xFFFF7043);
+    
+    final Color sheetColor = isDark ? const Color(0xFF121212) : Colors.white;
+    final Color textPrimary = isDark ? Colors.white : const Color(0xFF2D2D2D);
+    final Color textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final Color cardBg = isDark ? Colors.grey[900]! : Colors.white;
+    final Color iconBtnBg = isDark ? Colors.grey[850]! : Colors.white.withOpacity(0.9);
+
     return Scaffold(
+      backgroundColor: sheetColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Restaurant Details'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: iconBtnBg,
+            child: BackButton(color: isDark ? Colors.white : Colors.black),
+          ),
+        ),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -87,9 +102,7 @@ class _ResdetailPageState extends State<ResdetailPage> {
             .doc(widget.restaurantId)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: brandOrange));
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final name = data['name'] ?? 'No Name';
@@ -99,330 +112,212 @@ class _ResdetailPageState extends State<ResdetailPage> {
           final menuRefs = data['menuRef'] as List<dynamic>?;
 
           return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Restaurant header card
-                  Card(
-                    color: const Color(0xFFFFAB91),
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+            child: Column(
+              children: [
+                // Top Restaurant Image
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.35,
+                  width: double.infinity,
+                  child: imageUrl.isNotEmpty 
+                    ? Image.network(imageUrl, fit: BoxFit.cover)
+                    : Container(color: brandOrange, child: const Icon(Icons.restaurant, size: 50, color: Colors.white)),
+                ),
+                
+                // Content Sheet
+                Container(
+                  width: double.infinity,
+                  transform: Matrix4.translationValues(0, -30, 0),
+                  decoration: BoxDecoration(
+                    color: sheetColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16)),
-                          child: imageUrl.isNotEmpty
-                              ? Image.network(
-                                  imageUrl,
-                                  height: 180,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      height: 180,
-                                      color: const Color(0xFFFFAB91),
-                                      child: const Icon(
-                                        Icons.restaurant,
-                                        size: 60,
-                                        color: Colors.white,
-                                      ),
-                                    );
-                                  },
+                        // Header Row: Name + Heart Button (No Background)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                name, 
+                                style: TextStyle(
+                                  fontSize: 28, 
+                                  fontWeight: FontWeight.w900, 
+                                  color: textPrimary
                                 )
-                              : Container(
-                                  height: 180,
-                                  color: const Color(0xFFFFAB91),
-                                  child: const Icon(
-                                    Icons.restaurant,
-                                    size: 60,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 14, 13, 13),
-                                ),
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.location_on,
-                                      size: 16, color: Colors.red),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      address,
-                                      style: const TextStyle(
-                                          color: Color.fromARGB(255, 12, 12, 12)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star,
-                                      size: 20, color: Colors.amber),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    rating.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-
-                              // Watchlist button
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await addToWatchlist(
-                                      widget.restaurantId, "restorant");
-
-                                  setState(() {
-                                    isInWatchlist = !isInWatchlist;
-                                  });
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        isInWatchlist
-                                            ? 'Added to your watchlist'
-                                            : 'Removed from your watchlist',
-                                      ),
-                                    ),
-                                    
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                backgroundColor: isInWatchlist ? Colors.red : Colors.green, // red for remove, green for add
-                                  ),
-                                
-                                child: Text(isInWatchlist
-                                    ? "Remove from Watchlist"
-                                    : "Add to Watchlist"),
-                              ),
-
-                              // ⭐ user rating section
-                              Row(
-                                children: List.generate(5, (index) {
-                                  double starValue = index + 1;
-                                  return IconButton(
-                                    icon: Icon(
-                                      Icons.star,
-                                      color: (userRating ?? rating) >= starValue
-                                          ? Colors.amber
-                                          : Colors.grey[300],
-                                    ),
-                                    onPressed: () {
-                                      _rateRestaurant(starValue);
-                                    },
-                                  );
-                                }),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      'Menu',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5D4037),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Menu items as a grid - 3 per row
-                  if (menuRefs != null && menuRefs.isNotEmpty)
-                    FutureBuilder<List<DocumentSnapshot>>(
-                      future: Future.wait(
-                        menuRefs.map((ref) => (ref as DocumentReference).get()),
-                      ),
-                      builder: (context, menuSnapshot) {
-                        if (menuSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-
-                        if (!menuSnapshot.hasData || menuSnapshot.data!.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Text(
-                              'No menu items available',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
                             ),
-                          );
-                        }
-
-                        final menuDocs = menuSnapshot.data!;
-
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: menuDocs.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.7,
-                          ),
-                          itemBuilder: (context, index) {
-                            final menuData =
-                                menuDocs[index].data() as Map<String, dynamic>;
-                            final foodName = menuData['f_name'] ?? 'No Name';
-                            final price = menuData['price'] ?? 0;
-                            final imageUrl = menuData['imageurl'] ?? '';
-
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => FoodetailPage(
-                                        foodId: menuDocs[index].id),
+                            IconButton(
+                              onPressed: () async {
+                                await addToWatchlist(widget.restaurantId, "restorant");
+                                setState(() => isInWatchlist = !isInWatchlist);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isInWatchlist ? 'Added to favorites' : 'Removed from favorites',
+                                      style: TextStyle(color: isDark ? Colors.black : Colors.white),
+                                    ),
+                                    backgroundColor: isDark ? Colors.white : const Color(0xFF2D2D2D),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 1),
                                   ),
                                 );
                               },
-                              child: Card(
-                                color: const Color(0xFFFFAB91),
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Container(
-                                      height: 90,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFCCBC),
-                                        borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(12),
-                                        ),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(12),
-                                        ),
-                                        child: imageUrl.isNotEmpty
-                                            ? Image.network(
-                                                imageUrl,
-                                                width: double.infinity,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return Container(
-                                                    color: const Color(0xFFFFCCBC),
-                                                    child: const Icon(
-                                                      Icons.fastfood,
-                                                      size: 40,
-                                                      color: Color(0xFF5D4037),
-                                                    ),
-                                                  );
-                                                },
-                                              )
-                                            : Container(
-                                                color: const Color(0xFFFFCCBC),
-                                                child: const Icon(
-                                                  Icons.fastfood,
-                                                  size: 40,
-                                                  color: Color(0xFF5D4037),
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            foodName,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            '\$${price.toString()}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              icon: Icon(
+                                isInWatchlist ? Icons.favorite : Icons.favorite_border,
+                                color: isInWatchlist ? Colors.red : (isDark ? Colors.white54 : Colors.grey),
+                                size: 30,
                               ),
-                            );
-                          },
-                        );
-                      },
-                    )
-                  else
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'No menu available',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16),
-                      ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, color: brandOrange, size: 18),
+                            const SizedBox(width: 4),
+                            Expanded(child: Text(address, style: TextStyle(color: textSecondary, fontSize: 16))),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Rating Interface Card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Rate your experience", style: TextStyle(color: textSecondary, fontSize: 12)),
+                                  Row(
+                                    children: List.generate(5, (index) {
+                                      double starValue = index + 1;
+                                      return GestureDetector(
+                                        onTap: () => _rateRestaurant(starValue),
+                                        child: Icon(
+                                          Icons.star,
+                                          size: 28,
+                                          color: (userRating ?? rating) >= starValue ? Colors.amber : Colors.grey[300],
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  Text(rating.toStringAsFixed(1), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: textPrimary)),
+                                  const Text("Avg Rating", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                ],
+                              )
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+                        Text('Menu Highlights', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textPrimary)),
+                        const SizedBox(height: 16),
+
+                        // Menu Grid with Fallback Icons
+                        if (menuRefs != null && menuRefs.isNotEmpty)
+                          _buildMenuGrid(menuRefs, isDark, textPrimary, brandOrange)
+                        else
+                          const Center(child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text("No menu items available yet."),
+                          )),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
     );
   }
+
+  Widget _buildMenuGrid(List<dynamic> menuRefs, bool isDark, Color textPrimary, Color brandOrange) {
+    return FutureBuilder<List<DocumentSnapshot>>(
+      future: Future.wait(menuRefs.map((ref) => (ref as DocumentReference).get())),
+      builder: (context, menuSnapshot) {
+        if (!menuSnapshot.hasData) return const Center(child: CircularProgressIndicator());
+        
+        final menuDocs = menuSnapshot.data!;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: menuDocs.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 15,
+            crossAxisSpacing: 15,
+            childAspectRatio: 0.65,
+          ),
+          itemBuilder: (context, index) {
+            final menuData = menuDocs[index].data() as Map<String, dynamic>;
+            final String imgUrl = menuData['imageurl'] ?? '';
+
+            return GestureDetector(
+              onTap: () => Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => FoodetailPage(foodId: menuDocs[index].id))
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[850] : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: imgUrl.isNotEmpty 
+                          ? Image.network(imgUrl, fit: BoxFit.cover)
+                          : Center(child: Icon(Icons.fastfood_outlined, color: isDark ? Colors.white24 : Colors.grey[400], size: 30)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    menuData['f_name'] ?? '', 
+                    maxLines: 1, 
+                    overflow: TextOverflow.ellipsis, 
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPrimary)
+                  ),
+                  Text(
+                    '\$${menuData['price']}', 
+                    style: TextStyle(color: brandOrange, fontWeight: FontWeight.w800, fontSize: 14)
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
+// Global function for watchlist logic
 Future<void> addToWatchlist(String itemId, String type) async {
-  final userId = FirebaseAuth.instance.currentUser!.uid;
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  final userId = user.uid;
   final watchlistRef = FirebaseFirestore.instance.collection('watchlist');
 
-  // Check if item already exists
   final existing = await watchlistRef
       .where('userId', isEqualTo: userId)
       .where('itemId', isEqualTo: itemId)
@@ -437,7 +332,6 @@ Future<void> addToWatchlist(String itemId, String type) async {
       'addedAt': FieldValue.serverTimestamp(),
     });
   } else {
-    // Remove if exists
     for (var doc in existing.docs) {
       await doc.reference.delete();
     }
