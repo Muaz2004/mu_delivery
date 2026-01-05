@@ -9,11 +9,9 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. DETECT THEME
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color brandOrange = Color(0xFFFF7043);
     
-    // 2. DEFINE DYNAMIC COLORS
     final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
     final Color cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final Color textPrimary = isDark ? Colors.white : const Color(0xFF2D2D2D);
@@ -80,15 +78,15 @@ class OrdersPage extends StatelessWidget {
               final status = order['status'] ?? 'Pending';
 
               return Container(
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: 18), // Slightly more margin
                 decoration: BoxDecoration(
-                  color: cardColor, // DYNAMIC CARD COLOR
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: isDark ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.06),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -97,30 +95,37 @@ class OrdersPage extends StatelessWidget {
                     dividerColor: Colors.transparent,
                     splashColor: Colors.transparent,
                     highlightColor: Colors.transparent,
-                    // Fixes expansion arrow color in dark mode
                     unselectedWidgetColor: Colors.grey[500], 
                   ),
                   child: ExpansionTile(
-                    tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    // --- INCREASED TILE HEIGHT VIA VERTICAL PADDING ---
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18), 
                     leading: Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12), // Increased from 10
                       decoration: BoxDecoration(
                         color: brandOrange.withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.receipt_long_rounded, color: brandOrange, size: 20),
+                      child: const Icon(Icons.receipt_long_rounded, color: brandOrange, size: 24), // Increased from 20
                     ),
                     title: Text(
                       "Order #${orderDoc.id.substring(0, 5).toUpperCase()}",
                       style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        color: textPrimary, // DYNAMIC TEXT COLOR
+                        fontWeight: FontWeight.w900, // Made even bolder
+                        fontSize: 17, // Increased from 16
+                        color: textPrimary,
+                        letterSpacing: 0.2,
                       ),
                     ),
-                    subtitle: Text(
-                      formattedDate,
-                      style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        formattedDate,
+                        style: TextStyle(
+                          fontSize: 12, // Increased from 11
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                      ),
                     ),
                     trailing: _buildStatusChip(status),
                     children: [
@@ -132,50 +137,50 @@ class OrdersPage extends StatelessWidget {
                             Divider(color: isDark ? Colors.white10 : Colors.grey[100], thickness: 1),
                             const SizedBox(height: 8),
                             ...items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 5,
-                                        height: 5,
+                                        width: 6,
+                                        height: 6,
                                         decoration: const BoxDecoration(color: brandOrange, shape: BoxShape.circle),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 10),
                                       Text(
                                         "${item['name']}",
                                         style: TextStyle(
                                           color: textPrimary, 
                                           fontWeight: FontWeight.w600, 
-                                          fontSize: 13
+                                          fontSize: 14
                                         ),
                                       ),
                                       const Spacer(),
                                       Text(
                                         "x${item['quantity']}",
-                                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12),
+                                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                     ],
                                   ),
                                 )),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 12),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               decoration: BoxDecoration(
-                                color: subBoxColor, // DYNAMIC TOTAL BOX COLOR
-                                borderRadius: BorderRadius.circular(14),
+                                color: subBoxColor,
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     "Total Paid",
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 13),
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 14),
                                   ),
                                   Text(
                                     "\$${order['totalPrice'] ?? 0}",
                                     style: TextStyle(
                                       fontWeight: FontWeight.w900,
-                                      fontSize: 17,
+                                      fontSize: 18,
                                       color: textPrimary,
                                     ),
                                   ),
@@ -215,21 +220,21 @@ class OrdersPage extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: chipColor.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(statusIcon, size: 11, color: chipColor),
-          const SizedBox(width: 4),
+          Icon(statusIcon, size: 12, color: chipColor),
+          const SizedBox(width: 6),
           Text(
             status.toUpperCase(),
             style: TextStyle(
               color: chipColor,
-              fontSize: 9,
+              fontSize: 10,
               fontWeight: FontWeight.w900,
             ),
           ),
