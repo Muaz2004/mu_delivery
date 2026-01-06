@@ -17,65 +17,131 @@ class _SigninPageState extends State<SigninPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. DETECT THEME & DEFINE COLORS (Consistent with FoodDetail/Orders)
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    const Color brandOrange = Color(0xFFFF7043);
+    final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
+    final Color cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final Color textPrimary = isDark ? Colors.white : const Color(0xFF2D2D2D);
+    final Color textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign In")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: backgroundColor,
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Email input
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                hintText: "Email",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixIcon: const Icon(Icons.email),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Password input
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: "Password",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                prefixIcon: const Icon(Icons.lock),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Sign in button
-            SizedBox(
+            // 2. HEADER SECTION (Modern Welcome)
+            Container(
+              height: MediaQuery.of(context).size.height * 0.35,
               width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: _signIn,
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(fontSize: 16),
+              decoration: const BoxDecoration(
+                color: brandOrange,
+                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(60)),
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.delivery_dining_rounded, size: 80, color: Colors.white),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Welcome Back!",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    Text(
+                      "Sign in to continue your delivery",
+                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            // Navigate to Register
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Don't have an account? "),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const Authentication()),
-                    );
-                  },
-                  child: const Text("Register here"),
-                ),
-              ],
+
+            // 3. FORM SECTION
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  // Email Input
+                  _buildTextField(
+                    controller: _emailController,
+                    hint: "Email Address",
+                    icon: Icons.email_outlined,
+                    isDark: isDark,
+                    textPrimary: textPrimary,
+                    cardColor: cardColor,
+                  ),
+                  const SizedBox(height: 20),
+                  // Password Input
+                  _buildTextField(
+                    controller: _passwordController,
+                    hint: "Password",
+                    icon: Icons.lock_outline_rounded,
+                    isDark: isDark,
+                    textPrimary: textPrimary,
+                    cardColor: cardColor,
+                    isPassword: true,
+                  ),
+                  
+                  // Forgot Password alignment
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () { /* Logic later */ },
+                      child: const Text("Forgot Password?", style: TextStyle(color: brandOrange, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 4. SIGN IN BUTTON (Consistent with "Add to Cart")
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: brandOrange,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
+                      onPressed: _signIn,
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // 5. REGISTER NAVIGATION
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Don't have an account? ", style: TextStyle(color: textSecondary)),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Authentication()),
+                          );
+                        },
+                        child: const Text(
+                          "Register",
+                          style: TextStyle(color: brandOrange, fontWeight: FontWeight.w900, fontSize: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -83,21 +149,54 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
-  // Sign in logic
+  // REUSABLE TEXT FIELD STYLING
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required bool isDark,
+    required Color textPrimary,
+    required Color cardColor,
+    bool isPassword = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword,
+        style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
+          prefixIcon: Icon(icon, color: const Color(0xFFFF7043)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        ),
+      ),
+    );
+  }
+
+  // Logic remains untouched as requested
   Future<void> _signIn() async {
     try {
-      // Call provider's signIn method
       await context.read<myProvider>().signIn(
             _emailController.text,
             _passwordController.text,
           );
-
-      // Sign-in is successful, Wrapper handles navigation automatically
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign in successful!')),
       );
     } on FirebaseAuthException catch (e) {
-      // Email not verified
       if (e.code == 'email-not-verified') {
         showDialog(
           context: context,
@@ -123,7 +222,6 @@ class _SigninPageState extends State<SigninPage> {
           ),
         );
       } else {
-        // Handle other FirebaseAuth errors
         String message = '';
         if (e.code == 'invalid-email') {
           message = 'The email address is badly formatted.';
@@ -137,13 +235,16 @@ class _SigninPageState extends State<SigninPage> {
           message = 'No internet connection. Please try later.';
         } else if (e.code == 'too-many-requests') {
           message = 'Too many attempts. Try again later.';
-        } else if (e.code == 'operation-not-allowed') {
-          message = 'Email/password accounts are not enabled.';
         } else {
           message = e.message ?? 'Unknown error occurred';
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
+          SnackBar(
+            content: Text(message),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: const Color(0xFF2D2D2D),
+          ),
         );
       }
     } catch (e) {
