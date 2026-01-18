@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mu_delivery/authentication.dart';
 import 'package:mu_delivery/providers/auth_provider.dart';
-import 'package:mu_delivery/wraper.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -18,20 +17,7 @@ class _SigninPageState extends State<SigninPage> {
 
   @override
   Widget build(BuildContext context) {
-
-    // 🔥 NEW: listen to provider
-    final authProvider = context.watch<myProvider>();
-
-    // 🔥 NEW: auto redirect when login succeeds
-    if (authProvider.user != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const Wrapper()),
-        );
-      });
-    }
-
-    // Styling Variables (UNCHANGED)
+    // Styling Variables
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     const Color brandOrange = Color(0xFFFF7043);
     final Color backgroundColor = isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
@@ -81,6 +67,7 @@ class _SigninPageState extends State<SigninPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 10),
+                  // Styled Email input
                   _buildFieldContainer(
                     isDark, cardColor,
                     TextField(
@@ -90,6 +77,7 @@ class _SigninPageState extends State<SigninPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Styled Password input
                   _buildFieldContainer(
                     isDark, cardColor,
                     TextField(
@@ -100,7 +88,8 @@ class _SigninPageState extends State<SigninPage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
+                  
+                  // Sign in button
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -118,7 +107,8 @@ class _SigninPageState extends State<SigninPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
+                  
+                  // Navigate to Register
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -130,10 +120,8 @@ class _SigninPageState extends State<SigninPage> {
                             MaterialPageRoute(builder: (_) => const Authentication()),
                           );
                         },
-                        child: const Text(
-                          "Register here",
-                          style: TextStyle(color: brandOrange, fontWeight: FontWeight.bold),
-                        ),
+                        child: const Text("Register here", 
+                          style: TextStyle(color: brandOrange, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -146,6 +134,7 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
+  // --- UI HELPER METHODS ---
   Widget _buildFieldContainer(bool isDark, Color cardColor, Widget child) {
     return Container(
       decoration: BoxDecoration(
@@ -173,17 +162,21 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
+  // --- YOUR LOGIC (100% UNTOUCHED) ---
   Future<void> _signIn() async {
     try {
+      // Call provider's signIn method
       await context.read<myProvider>().signIn(
             _emailController.text,
             _passwordController.text,
           );
 
+      // Sign-in is successful, Wrapper handles navigation automatically
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sign in successful!')),
       );
     } on FirebaseAuthException catch (e) {
+      // Email not verified
       if (e.code == 'email-not-verified') {
         showDialog(
           context: context,
@@ -209,6 +202,7 @@ class _SigninPageState extends State<SigninPage> {
           ),
         );
       } else {
+        // Handle other FirebaseAuth errors
         String message = '';
         if (e.code == 'invalid-email') {
           message = 'The email address is badly formatted.';
