@@ -29,12 +29,12 @@ class CartProvider extends ChangeNotifier {
 
 
   double get totalPrice {
-    double total = 0;
-    for (var item in _cartItems) {
-      total += item['price'] ?? 0;
-    }
-    return total;
+  double total = 0;
+  for (var item in _cartItems) {
+    total += (item['price'] ?? 0) * (item['quantity'] ?? 1);
   }
+  return total;
+}
 
   void removeItem(int index) {
     if (index >= 0 && index < cartItems.length) {
