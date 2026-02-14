@@ -21,10 +21,7 @@ class OwnerOrders extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "Manage Orders",
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24, color: brandOrange),
-        ),
+      
         centerTitle: true,
       ),
       body: FutureBuilder<QuerySnapshot>(
