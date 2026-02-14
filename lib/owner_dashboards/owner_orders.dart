@@ -8,47 +8,43 @@ class OwnerOrders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const appBarColor = Color(0xFFFF7043); // AppBar orange
-    const cardColor = Color(0xFFFFAB91); // Slightly lighter matching warm color
+    // Brand Colors
+    const Color brandOrange = Color(0xFFFF7043);
+    const Color bgLight = Color(0xFFF8F9FA);
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
     final String ownerId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF3E0), // soft warm background
+      backgroundColor: isDark ? const Color(0xFF121212) : bgLight,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF3E0),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text(
-          "My Orders",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Manage Orders",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24, color: brandOrange),
         ),
         centerTitle: true,
       ),
       body: FutureBuilder<QuerySnapshot>(
-        // Step 1: Get all restaurants that belong to this owner
+      
         future: FirebaseFirestore.instance
             .collection('Restorant_table')
             .where('owner_id', isEqualTo: ownerId)
             .get(),
         builder: (context, restaurantSnapshot) {
           if (restaurantSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: CircularProgressIndicator(color: appBarColor));
+            return const Center(child: CircularProgressIndicator(color: brandOrange));
           }
 
-          if (!restaurantSnapshot.hasData ||
-              restaurantSnapshot.data!.docs.isEmpty) {
-            return const Center(
-                child: Text(
-              "You don't have any registered restaurants.",
-              style: TextStyle(fontSize: 18, color: Colors.black54),
-            ));
+          if (!restaurantSnapshot.hasData || restaurantSnapshot.data!.docs.isEmpty) {
+            return _buildEmptyState("You don't have any registered restaurants.");
           }
 
-          // Step 2: Extract restaurant IDs
-          final ownerRestaurantIds = restaurantSnapshot.data!.docs
-              .map((doc) => doc.id)
-              .toList();
+          
+          final ownerRestaurantIds = restaurantSnapshot.data!.docs.map((doc) => doc.id).toList();
 
-          // Step 3: Get all orders (we will filter locally)
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('orders')
@@ -56,175 +52,158 @@ class OwnerOrders extends StatelessWidget {
                 .snapshots(),
             builder: (context, ordersSnapshot) {
               if (ordersSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                    child: CircularProgressIndicator(color: appBarColor));
+                return const Center(child: CircularProgressIndicator(color: brandOrange));
               }
 
               if (!ordersSnapshot.hasData || ordersSnapshot.data!.docs.isEmpty) {
-                return const Center(
-                    child: Text(
-                  "No orders found.",
-                  style: TextStyle(fontSize: 18, color: Colors.black54),
-                ));
+                return _buildEmptyState("No orders found.");
               }
 
-              // Step 4: Filter orders locally based on ownerRestaurantIds
+             
               final filteredOrders = ordersSnapshot.data!.docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 return ownerRestaurantIds.contains(data['restaurantId']);
               }).toList();
 
               if (filteredOrders.isEmpty) {
-                return const Center(
-                    child: Text(
-                  "No orders found for your restaurants.",
-                  style: TextStyle(fontSize: 18, color: Colors.black54),
-                ));
+                return _buildEmptyState("No orders found for your restaurants.");
               }
 
               return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 20),
                 itemCount: filteredOrders.length,
                 itemBuilder: (context, index) {
-                  final order =
-                      filteredOrders[index].data() as Map<String, dynamic>;
+                  final orderDoc = filteredOrders[index];
+                  final order = orderDoc.data() as Map<String, dynamic>;
                   final orderTime = (order['orderTime'] as Timestamp?)?.toDate();
                   final formattedDate = orderTime != null
-                      ? DateFormat('MMM dd, yyyy – hh:mm a').format(orderTime)
+                      ? DateFormat('MMM dd, hh:mm a').format(orderTime)
                       : 'Unknown date';
                   final items = (order['items'] as List<dynamic>?) ?? [];
                   final userId = order['userId'] as String?;
+                  final String currentStatus = order['status'] ?? 'pending';
 
-                  // Step 5: Fetch user info for each order
+                  
                   return FutureBuilder<DocumentSnapshot>(
                     future: userId != null
-                        ? FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(userId)
-                            .get()
+                        ? FirebaseFirestore.instance.collection('users').doc(userId).get()
                         : null,
                     builder: (context, userSnapshot) {
-                      String userName = 'Unknown';
+                      String userName = 'Customer';
                       String userMobile = 'N/A';
 
                       if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                        final userData =
-                            userSnapshot.data!.data() as Map<String, dynamic>;
+                        final userData = userSnapshot.data!.data() as Map<String, dynamic>;
                         userName = userData['name'] ?? 'Unknown';
                         userMobile = userData['mobile'] ?? 'N/A';
                       }
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        color: cardColor,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Customer: $userName",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.black87),
-                              ),
-                              Text(
-                                "Phone: $userMobile",
-                                style: const TextStyle(
-                                    fontSize: 14, color: Colors.black87),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                "Items Ordered:",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.black87),
-                              ),
-                              const SizedBox(height: 6),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: items.map((item) {
-                                  return Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 2.5),
-                                    child: Text(
-                                        "- ${item['name']} x${item['quantity']}",
-                                        style: const TextStyle(
-                                            fontSize: 15, color: Colors.black87)),
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Total: \$${order['totalPrice'] ?? 0}",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.black87),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                        color: appBarColor,
-                                        borderRadius: BorderRadius.circular(12)),
-                                    child: Text(order['status'] ?? 'Pending',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white)),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text("Ordered on: $formattedDate",
-                                  style: const TextStyle(
-                                      color: Colors.black87, fontSize: 13)),
-
-                              // ✅ Added Dropdown for status update
-                              const SizedBox(height: 16),
-                              DropdownButtonFormField<String>(
-                                value: order['status'] ?? 'pending',
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: brandOrange.withOpacity(0.1),
+                                  child: const Icon(Icons.person, color: brandOrange),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(userName,
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                      Text(formattedDate,
+                                          style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                                    ],
                                   ),
                                 ),
-                                items: [
-                                  'pending',
-                                  'preparing',
-                                  'out_for_delivery',
-                                  'delivered'
-                                ]
-                                    .map(
-                                      (status) => DropdownMenuItem(
-                                        value: status,
-                                        child: Text(
-                                          status[0].toUpperCase() +
-                                              status.substring(1).replaceAll('_', ' '),
+                                _buildStatusBadge(currentStatus),
+                              ],
+                            ),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Divider(),
+                                    const SizedBox(height: 8),
+                                    _infoRow(Icons.phone, "Contact", userMobile),
+                                    const SizedBox(height: 12),
+                                    const Text("ORDER ITEMS",
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: brandOrange)),
+                                    const SizedBox(height: 8),
+                                    ...items.map((item) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text("${item['name']} x${item['quantity']}",
+                                                  style: const TextStyle(fontWeight: FontWeight.w500)),
+                                              Text("\$${(item['price'] ?? 0) * (item['quantity'] ?? 1)}"),
+                                            ],
+                                          ),
+                                        )),
+                                    const Divider(),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text("Grand Total", style: TextStyle(fontWeight: FontWeight.bold)),
+                                        Text("\$${order['totalPrice'] ?? 0}",
+                                            style: const TextStyle(fontWeight: FontWeight.w900, color: brandOrange, fontSize: 18)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    const Text("UPDATE STATUS",
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                    const SizedBox(height: 8),
+                                    // RE-STYLED DROPDOWN (LOGIC UNTOUCHED)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          value: currentStatus,
+                                          items: ['pending', 'preparing', 'out_for_delivery', 'delivered']
+                                              .map((status) => DropdownMenuItem(
+                                                    value: status,
+                                                    child: Text(status.toUpperCase().replaceAll('_', ' ')),
+                                                  ))
+                                              .toList(),
+                                          onChanged: (value) async {
+                                            if (value != null) {
+                                              await FirebaseFirestore.instance
+                                                  .collection('orders')
+                                                  .doc(orderDoc.id)
+                                                  .update({'status': value});
+                                            }
+                                          },
                                         ),
                                       ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) async {
-                                  if (value != null) {
-                                    await FirebaseFirestore.instance
-                                        .collection('orders')
-                                        .doc(filteredOrders[index].id)
-                                        .update({'status': value});
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 16),
+                                    ),
+                                  ],
+                                ),
+                              )
                             ],
                           ),
                         ),
@@ -237,6 +216,49 @@ class OwnerOrders extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  // --- UI COMPONENTS ---
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.receipt_long_rounded, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(message, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color;
+    switch (status) {
+      case 'pending': color = Colors.orange; break;
+      case 'preparing': color = Colors.blue; break;
+      case 'out_for_delivery': color = Colors.purple; break;
+      case 'delivered': color = Colors.green; break;
+      default: color = Colors.grey;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(status.toUpperCase().replaceAll('_', ' '),
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Text("$label: ", style: const TextStyle(color: Colors.grey)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }
